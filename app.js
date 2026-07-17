@@ -1727,6 +1727,12 @@ function renderStorefrontCarousel() {
     const indicatorsContainer = document.querySelector('.carousel-indicators');
     if (!slidesContainer || !indicatorsContainer) return;
     
+    // Fallback if carousel is empty
+    if (!state.carousel || state.carousel.length === 0) {
+        state.carousel = [...DEFAULT_CAROUSEL];
+        localStorage.setItem('farmacia_carousel', JSON.stringify(state.carousel));
+    }
+    
     slidesContainer.innerHTML = '';
     indicatorsContainer.innerHTML = '';
     
