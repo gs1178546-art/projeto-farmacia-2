@@ -156,14 +156,79 @@ const DEFAULT_CAROUSEL = [
     }
 ];
 
-const SALES_HISTORY_DATA = [
-    { day: "Seg", sales: 1200 },
-    { day: "Ter", sales: 1850 },
-    { day: "Qua", sales: 1400 },
-    { day: "Qui", sales: 2100 },
-    { day: "Sex", sales: 1900 },
-    { day: "Sáb", sales: 2800 },
-    { day: "Dom", sales: 3148 }
+const DEFAULT_ORDERS = [
+    {
+        id: "O-1001",
+        email: "maria.o@example.com",
+        date: new Date(Date.now() - 6 * 24 * 60 * 60 * 1000).toLocaleDateString('pt-BR'),
+        total: 120.50,
+        items: [
+            { name: "Dipirona Monoidratada 500mg", qty: 2, price: 9.90 },
+            { name: "Protetor Solar Facial La Roche-Posay Anthelios SPF 60", qty: 1, price: 89.90 }
+        ]
+    },
+    {
+        id: "O-1002",
+        email: "carlos.edu@example.com",
+        date: new Date(Date.now() - 4 * 24 * 60 * 60 * 1000).toLocaleDateString('pt-BR'),
+        total: 45.00,
+        items: [
+            { name: "Vitamina C Redoxon Tripla Ação Efervescente", qty: 1, price: 45.00 }
+        ]
+    },
+    {
+        id: "O-1003",
+        email: "anaclara@example.com",
+        date: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toLocaleDateString('pt-BR'),
+        total: 215.70,
+        items: [
+            { name: "Protetor Solar Facial La Roche-Posay Anthelios SPF 60", qty: 2, price: 89.90 },
+            { name: "Desodorante Clinique Clinical Creme Antitranspirante", qty: 1, price: 32.90 }
+        ]
+    },
+    {
+        id: "O-1004",
+        email: "maria.o@example.com",
+        date: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000).toLocaleDateString('pt-BR'),
+        total: 32.90,
+        items: [
+            { name: "Desodorante Clinique Clinical Creme Antitranspirante", qty: 1, price: 32.90 }
+        ]
+    },
+    {
+        id: "O-1005",
+        email: "jpmendes@example.com",
+        date: new Date().toLocaleDateString('pt-BR'),
+        total: 96.80,
+        items: [
+            { name: "Paracetamol 750mg Analgésico", qty: 1, price: 18.50 },
+            { name: "Fralda Pampers Confort Sec G", qty: 1, price: 79.90 }
+        ]
+    }
+];
+
+const DEFAULT_NOTIFICATIONS = [
+    {
+        id: "n1",
+        text: "Novo cliente Maria Oliveira cadastrou-se na loja",
+        time: "Há 5 min",
+        type: "info",
+        target: "admin-customers"
+    },
+    {
+        id: "n2",
+        text: "Pedido #O-1004 aprovado com sucesso",
+        time: "Há 1 hora",
+        type: "success",
+        target: "admin-orders"
+    },
+    {
+        id: "n3",
+        text: "Alerta: Estoque de Dipirona Monoidratada está abaixo de 5 unidades!",
+        time: "Há 3 horas",
+        type: "warning",
+        target: "admin-products"
+    }
 ];
 
 // ==========================================================================
@@ -174,6 +239,8 @@ const state = {
     promotions: DEFAULT_PROMOTIONS,
     customers: DEFAULT_CUSTOMERS,
     carousel: DEFAULT_CAROUSEL,
+    orders: DEFAULT_ORDERS,
+    notifications: DEFAULT_NOTIFICATIONS,
     cart: [],
     cep: '',
     activeCategory: 'todos',
@@ -208,7 +275,8 @@ state.products = safeJSONParse('farmacia_products', DEFAULT_PRODUCTS);
 state.promotions = safeJSONParse('farmacia_promotions', DEFAULT_PROMOTIONS);
 state.customers = safeJSONParse('farmacia_customers', DEFAULT_CUSTOMERS);
 state.carousel = safeJSONParse('farmacia_carousel', DEFAULT_CAROUSEL);
-state.orders = safeJSONParse('farmacia_orders', []);
+state.orders = safeJSONParse('farmacia_orders', DEFAULT_ORDERS);
+state.notifications = safeJSONParse('farmacia_notifications', DEFAULT_NOTIFICATIONS);
 state.cart = safeJSONParse('farmacia_cart', []);
 state.cep = localStorage.getItem('farmacia_cep') || '';
 state.currentUser = safeJSONParse('farmacia_user', null);
@@ -252,6 +320,10 @@ function initApp() {
             adminView.style.display = 'flex';
             storefrontView.style.display = 'none';
             runSafeInit(renderAdminProductsTable, "Admin Products Table");
+            runSafeInit(renderAdminOrdersTable, "Admin Orders Table");
+            runSafeInit(initAdminDashboardFilter, "Admin Dashboard Filter");
+            runSafeInit(initAdminSearch, "Admin Global Search");
+            runSafeInit(initAdminNotifications, "Admin Notifications");
             runSafeInit(drawSalesChart, "Sales Chart");
         }
     }
@@ -427,6 +499,10 @@ function initAuth() {
                     if (storefrontView) storefrontView.style.display = 'none';
                     
                     renderAdminProductsTable();
+                    renderAdminOrdersTable();
+                    initAdminDashboardFilter();
+                    initAdminSearch();
+                    initAdminNotifications();
                     drawSalesChart();
                     loginForm.reset();
                 }, 1000);
@@ -500,6 +576,9 @@ function initAuth() {
                 cashbackBalance: 0
             });
             localStorage.setItem('farmacia_customers', JSON.stringify(state.customers));
+            
+            // Notification alert for admin
+            addAdminNotification(`Novo cliente ${name} cadastrou-se na loja`, 'info', 'admin-customers');
             
             // Auto login
             state.currentUser = { email: email, name: name, role: 'customer' };
@@ -648,10 +727,35 @@ function initAdminPanel() {
     }
 }
 
-// Draw SVG Sales performance charts
+// Draw SVG Sales performance charts dynamically based on state.orders
 function drawSalesChart() {
     const wrapper = document.getElementById('sales-chart-wrapper');
     if (!wrapper) return;
+    
+    wrapper.innerHTML = '';
+    
+    // Generate dates for the last 7 days
+    const dates = [];
+    for (let i = 6; i >= 0; i--) {
+        const d = new Date();
+        d.setDate(d.getDate() - i);
+        dates.push({
+            dateStr: d.toLocaleDateString('pt-BR'),
+            dayLabel: d.toLocaleDateString('pt-BR', { weekday: 'short' }).substring(0, 3).toUpperCase(),
+            sales: 0,
+            ordersCount: 0
+        });
+    }
+    
+    // Fill sales and orders count from state.orders
+    dates.forEach(day => {
+        state.orders.forEach(order => {
+            if (order.date === day.dateStr) {
+                day.sales += order.total;
+                day.ordersCount += 1;
+            }
+        });
+    });
     
     const width = wrapper.clientWidth || 600;
     const height = 240;
@@ -663,14 +767,15 @@ function drawSalesChart() {
     const chartWidth = width - paddingLeft - paddingRight;
     const chartHeight = height - paddingTop - paddingBottom;
     
-    const maxSales = Math.max(...SALES_HISTORY_DATA.map(d => d.sales)) * 1.1;
+    const maxSales = Math.max(...dates.map(d => d.sales), 100) * 1.1; // Ensure maxSales is at least 100
     
-    const points = SALES_HISTORY_DATA.map((d, index) => {
-        const x = paddingLeft + (index / (SALES_HISTORY_DATA.length - 1)) * chartWidth;
+    const points = dates.map((d, index) => {
+        const x = paddingLeft + (index / (dates.length - 1)) * chartWidth;
         const y = height - paddingBottom - (d.sales / maxSales) * chartHeight;
-        return { x, y, day: d.day, sales: d.sales };
+        return { x, y, dayLabel: d.dayLabel, dateStr: d.dateStr, sales: d.sales, ordersCount: d.ordersCount };
     });
     
+    // Build smooth Bezier path
     let pathD = `M ${points[0].x} ${points[0].y}`;
     for (let i = 1; i < points.length; i++) {
         const cpX1 = points[i-1].x + (points[i].x - points[i-1].x) / 2;
@@ -683,33 +788,73 @@ function drawSalesChart() {
     const fillD = `${pathD} L ${points[points.length-1].x} ${height - paddingBottom} L ${points[0].x} ${height - paddingBottom} Z`;
     
     let svgContent = `
-        <svg class="svg-chart" viewBox="0 0 ${width} ${height}" xmlns="http://www.w3.org/2000/svg">
+        <svg class="svg-chart" viewBox="0 0 ${width} ${height}" xmlns="http://www.w3.org/2000/svg" style="overflow: visible;">
             <defs>
-                <linearGradient id="chartGradient" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="0%" stop-color="var(--primary)" stop-opacity="0.2"/>
+                <linearGradient id="chartAreaGradient" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0%" stop-color="var(--primary)" stop-opacity="0.25"/>
                     <stop offset="100%" stop-color="var(--primary)" stop-opacity="0.0"/>
                 </linearGradient>
             </defs>
-            <line x1="${paddingLeft}" y1="${paddingTop}" x2="${width - paddingRight}" y2="${paddingTop}" stroke="#e2e8f0" stroke-width="1" stroke-dasharray="4"/>
-            <line x1="${paddingLeft}" y1="${paddingTop + chartHeight/2}" x2="${width - paddingRight}" y2="${paddingTop + chartHeight/2}" stroke="#e2e8f0" stroke-width="1" stroke-dasharray="4"/>
+            <line x1="${paddingLeft}" y1="${paddingTop}" x2="${width - paddingRight}" y2="${paddingTop}" class="chart-grid-line" stroke-dasharray="4"/>
+            <line x1="${paddingLeft}" y1="${paddingTop + chartHeight/2}" x2="${width - paddingRight}" y2="${paddingTop + chartHeight/2}" class="chart-grid-line" stroke-dasharray="4"/>
             <line x1="${paddingLeft}" y1="${height - paddingBottom}" x2="${width - paddingRight}" y2="${height - paddingBottom}" stroke="#cbd5e1" stroke-width="1.5"/>
-            <path d="${fillD}" fill="url(#chartGradient)"/>
-            <path d="${pathD}" fill="none" stroke="var(--primary)" stroke-width="2.5" stroke-linecap="round"/>
-            <text x="${paddingLeft - 10}" y="${paddingTop + 4}" fill="#64748b" font-size="10" font-weight="600" text-anchor="end">R$ ${(maxSales).toFixed(0)}</text>
-            <text x="${paddingLeft - 10}" y="${paddingTop + chartHeight/2 + 4}" fill="#64748b" font-size="10" font-weight="600" text-anchor="end">R$ ${(maxSales/2).toFixed(0)}</text>
-            <text x="${paddingLeft - 10}" y="${height - paddingBottom + 4}" fill="#64748b" font-size="10" font-weight="600" text-anchor="end">R$ 0</text>
+            <path d="${fillD}" class="chart-area"/>
+            <path d="${pathD}" class="chart-line"/>
+            <text x="${paddingLeft - 10}" y="${paddingTop + 4}" fill="#64748b" font-size="10" font-weight="700" text-anchor="end">R$ ${(maxSales).toFixed(0)}</text>
+            <text x="${paddingLeft - 10}" y="${paddingTop + chartHeight/2 + 4}" fill="#64748b" font-size="10" font-weight="700" text-anchor="end">R$ ${(maxSales/2).toFixed(0)}</text>
+            <text x="${paddingLeft - 10}" y="${height - paddingBottom + 4}" fill="#64748b" font-size="10" font-weight="700" text-anchor="end">R$ 0</text>
     `;
     
     points.forEach(pt => {
         svgContent += `
-            <circle cx="${pt.x}" cy="${pt.y}" r="4.5" fill="white" stroke="var(--primary)" stroke-width="2"/>
-            <text x="${pt.x}" y="${height - paddingBottom + 18}" fill="#64748b" font-size="10" font-weight="700" text-anchor="middle">${pt.day}</text>
-            <text x="${pt.x}" y="${pt.y - 10}" fill="#0f172a" font-size="9" font-weight="800" text-anchor="middle">R$ ${pt.sales}</text>
+            <circle cx="${pt.x}" cy="${pt.y}" r="5" class="chart-point-circle" data-date="${pt.dateStr}" data-sales="${pt.sales.toFixed(2)}" data-orders="${pt.ordersCount}"/>
+            <text x="${pt.x}" y="${height - paddingBottom + 18}" fill="#64748b" font-size="10" font-weight="700" text-anchor="middle">${pt.dayLabel}</text>
         `;
     });
     
     svgContent += `</svg>`;
     wrapper.innerHTML = svgContent;
+    
+    setupChartTooltips(wrapper);
+}
+
+function setupChartTooltips(wrapper) {
+    const circles = wrapper.querySelectorAll('.chart-point-circle');
+    
+    let tooltip = document.getElementById('chart-tooltip-box');
+    if (!tooltip) {
+        tooltip = document.createElement('div');
+        tooltip.id = 'chart-tooltip-box';
+        tooltip.className = 'chart-tooltip-box';
+        tooltip.style.opacity = '0';
+        tooltip.style.position = 'absolute';
+        document.body.appendChild(tooltip);
+    }
+    
+    circles.forEach(circle => {
+        circle.addEventListener('mouseenter', (e) => {
+            const date = circle.dataset.date;
+            const sales = circle.dataset.sales;
+            const orders = circle.dataset.orders;
+            
+            tooltip.innerHTML = `
+                <div style="font-weight: 800; border-bottom: 1px solid rgba(255,255,255,0.2); padding-bottom: 2px; margin-bottom: 4px;">${date}</div>
+                <div>Faturamento: <strong style="color: var(--primary-light)">R$ ${sales}</strong></div>
+                <div>Pedidos: <strong>${orders}</strong></div>
+            `;
+            
+            tooltip.style.opacity = '1';
+        });
+        
+        circle.addEventListener('mousemove', (e) => {
+            tooltip.style.left = (e.pageX) + 'px';
+            tooltip.style.top = (e.pageY) + 'px';
+        });
+        
+        circle.addEventListener('mouseleave', () => {
+            tooltip.style.opacity = '0';
+        });
+    });
 }
 
 // CRUD: Listing Products
@@ -1846,6 +1991,9 @@ function initCheckout() {
                 };
                 state.orders.push(newOrder);
                 localStorage.setItem('farmacia_orders', JSON.stringify(state.orders));
+                
+                // Notification alert for admin
+                addAdminNotification(`Pedido #${newOrder.id} pago com sucesso (Total: R$ ${newOrder.total.toFixed(2)})`, 'success', 'admin-orders');
             }
             
             // Clear Cart
@@ -2000,4 +2148,338 @@ function initPrescriptionUpload() {
             }, 200);
         });
     }
+}
+
+// ==========================================================================
+// ADMIN DASHBOARD PERIOD FILTER & DYNAMIC METRICS
+// ==========================================================================
+function initAdminDashboardFilter() {
+    const filterSelect = document.getElementById('admin-kpi-filter');
+    if (filterSelect) {
+        filterSelect.addEventListener('change', () => {
+            calculateDashboardKPIs(filterSelect.value);
+        });
+    }
+    
+    // Initial run
+    calculateDashboardKPIs('7days');
+    
+    // KPI Cross Navigation clicks
+    const kpiOrders = document.getElementById('metric-kpi-orders');
+    if (kpiOrders) {
+        kpiOrders.addEventListener('click', () => {
+            adminShowTab('admin-orders');
+        });
+    }
+    const kpiRevenue = document.getElementById('metric-kpi-revenue');
+    if (kpiRevenue) {
+        kpiRevenue.addEventListener('click', () => {
+            adminShowTab('admin-dashboard');
+            const wrapper = document.getElementById('sales-chart-wrapper');
+            if (wrapper) wrapper.scrollIntoView({ behavior: 'smooth' });
+        });
+    }
+    const kpiAverage = document.getElementById('metric-kpi-average');
+    if (kpiAverage) {
+        kpiAverage.addEventListener('click', () => {
+            adminShowTab('admin-dashboard');
+            const wrapper = document.getElementById('sales-chart-wrapper');
+            if (wrapper) wrapper.scrollIntoView({ behavior: 'smooth' });
+        });
+    }
+}
+
+function calculateDashboardKPIs(filter) {
+    const revenueEl = document.getElementById('admin-kpi-revenue');
+    const ordersEl = document.getElementById('admin-kpi-orders');
+    const averageEl = document.getElementById('admin-kpi-average');
+    
+    if (!revenueEl || !ordersEl || !averageEl) return;
+    
+    let filteredOrders = state.orders;
+    
+    if (filter === 'today') {
+        const todayStr = new Date().toLocaleDateString('pt-BR');
+        filteredOrders = state.orders.filter(o => o.date === todayStr);
+    } else if (filter === '7days') {
+        filteredOrders = state.orders.filter(o => {
+            const parts = o.date.split('/');
+            if (parts.length !== 3) return false;
+            const orderDate = new Date(parseInt(parts[2]), parseInt(parts[1]) - 1, parseInt(parts[0]));
+            const diffTime = Math.abs(new Date() - orderDate);
+            const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+            return diffDays <= 7;
+        });
+    }
+    
+    const totalOrders = filteredOrders.length;
+    const totalRevenue = filteredOrders.reduce((sum, o) => sum + o.total, 0);
+    const averageTicket = totalOrders > 0 ? (totalRevenue / totalOrders) : 0;
+    
+    revenueEl.textContent = `R$ ${totalRevenue.toFixed(2)}`;
+    ordersEl.textContent = totalOrders.toString();
+    averageEl.textContent = `R$ ${averageTicket.toFixed(2)}`;
+}
+
+function adminShowTab(targetSecId) {
+    const navButtons = document.querySelectorAll('.admin-nav-btn[data-target]');
+    navButtons.forEach(b => {
+        if (b.dataset.target === targetSecId) {
+            b.classList.add('active');
+        } else {
+            b.classList.remove('active');
+        }
+    });
+    
+    document.querySelectorAll('.admin-section').forEach(sec => {
+        if (sec.id === targetSecId) {
+            sec.classList.add('active');
+        } else {
+            sec.classList.remove('active');
+        }
+    });
+    
+    if (targetSecId === 'admin-dashboard') {
+        drawSalesChart();
+    }
+}
+
+// ==========================================================================
+// ADMIN GLOBAL SEARCH
+// ==========================================================================
+function initAdminSearch() {
+    const searchInput = document.getElementById('admin-search-input');
+    const resultsContainer = document.getElementById('admin-search-results');
+    
+    if (!searchInput || !resultsContainer) return;
+    
+    searchInput.addEventListener('input', () => {
+        const query = searchInput.value.trim().toLowerCase();
+        if (!query) {
+            resultsContainer.style.display = 'none';
+            resultsContainer.innerHTML = '';
+            return;
+        }
+        
+        const matchedOrders = state.orders.filter(o => 
+            o.id.toLowerCase().includes(query) || 
+            o.email.toLowerCase().includes(query)
+        );
+        
+        const matchedCustomers = state.customers.filter(c => 
+            c.name.toLowerCase().includes(query) || 
+            c.email.toLowerCase().includes(query)
+        );
+        
+        resultsContainer.innerHTML = '';
+        let count = 0;
+        
+        matchedOrders.forEach(o => {
+            if (count >= 5) return;
+            const div = document.createElement('div');
+            div.className = 'search-result-item';
+            div.innerHTML = `
+                <div class="result-title">Pedido #${o.id}</div>
+                <div class="result-meta">Cliente: ${o.email} | Total: R$ ${o.total.toFixed(2)}</div>
+            `;
+            div.addEventListener('click', () => {
+                adminShowTab('admin-orders');
+                searchInput.value = '';
+                resultsContainer.style.display = 'none';
+                
+                setTimeout(() => {
+                    const row = document.querySelector(`tr[data-order-id="${o.id}"]`);
+                    if (row) {
+                        row.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                        row.style.backgroundColor = 'var(--primary-light)';
+                        setTimeout(() => { row.style.backgroundColor = ''; }, 3000);
+                    }
+                }, 100);
+            });
+            resultsContainer.appendChild(div);
+            count++;
+        });
+        
+        matchedCustomers.forEach(c => {
+            if (count >= 10) return;
+            const div = document.createElement('div');
+            div.className = 'search-result-item';
+            div.innerHTML = `
+                <div class="result-title">${c.name} (Cliente)</div>
+                <div class="result-meta">${c.email} | Gasto: R$ ${c.totalSpent.toFixed(2)}</div>
+            `;
+            div.addEventListener('click', () => {
+                adminShowTab('admin-customers');
+                searchInput.value = '';
+                resultsContainer.style.display = 'none';
+                
+                setTimeout(() => {
+                    const row = document.querySelector(`tr[data-customer-email="${c.email}"]`);
+                    if (row) {
+                        row.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                        row.style.backgroundColor = 'var(--primary-light)';
+                        setTimeout(() => { row.style.backgroundColor = ''; }, 3000);
+                    }
+                }, 100);
+            });
+            resultsContainer.appendChild(div);
+            count++;
+        });
+        
+        if (count === 0) {
+            resultsContainer.innerHTML = `<div style="padding:12px; font-size:12px; color:var(--text-light); text-align:center">Nenhum resultado encontrado.</div>`;
+        }
+        
+        resultsContainer.style.display = 'flex';
+    });
+    
+    document.addEventListener('click', (e) => {
+        if (!searchInput.contains(e.target) && !resultsContainer.contains(e.target)) {
+            resultsContainer.style.display = 'none';
+        }
+    });
+}
+
+// ==========================================================================
+// ADMIN CENTRAL DE NOTIFICAÇÕES (tempo real simulado)
+// ==========================================================================
+function initAdminNotifications() {
+    const notificationsBtn = document.getElementById('admin-notifications-btn');
+    const dropdown = document.getElementById('admin-notifications-dropdown');
+    const clearBtn = document.getElementById('admin-clear-notifications');
+    
+    if (!notificationsBtn || !dropdown) return;
+    
+    notificationsBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        dropdown.style.display = dropdown.style.display === 'none' ? 'block' : 'none';
+    });
+    
+    if (clearBtn) {
+        clearBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            state.notifications = [];
+            localStorage.setItem('farmacia_notifications', JSON.stringify(state.notifications));
+            updateNotificationsUI();
+        });
+    }
+    
+    document.addEventListener('click', (e) => {
+        if (!notificationsBtn.contains(e.target) && !dropdown.contains(e.target)) {
+            dropdown.style.display = 'none';
+        }
+    });
+    
+    updateNotificationsUI();
+    
+    // Polling simulation for random stock alert
+    setInterval(() => {
+        if (state.isAdmin && Math.random() < 0.15) {
+            const randomProd = state.products[Math.floor(Math.random() * state.products.length)];
+            addAdminNotification(`Alerta: Estoque baixo de ${randomProd.name} (${Math.floor(Math.random() * 4) + 1} unidades)`, 'warning', 'admin-products');
+        }
+    }, 45000);
+}
+
+function addAdminNotification(text, type, target) {
+    const newNotif = {
+        id: `n${Date.now()}`,
+        text,
+        time: "Agora",
+        type,
+        target
+    };
+    state.notifications.unshift(newNotif);
+    localStorage.setItem('farmacia_notifications', JSON.stringify(state.notifications));
+    updateNotificationsUI();
+    
+    if (state.isAdmin) {
+        showGlobalNotification(text);
+    }
+}
+
+function updateNotificationsUI() {
+    const badge = document.getElementById('admin-notifications-badge');
+    const list = document.getElementById('admin-notifications-list');
+    
+    if (!badge || !list) return;
+    
+    const count = state.notifications.length;
+    if (count > 0) {
+        badge.textContent = count.toString();
+        badge.style.display = 'block';
+    } else {
+        badge.style.display = 'none';
+    }
+    
+    if (count === 0) {
+        list.innerHTML = `<div class="dropdown-empty">Nenhuma notificação recente.</div>`;
+        return;
+    }
+    
+    list.innerHTML = state.notifications.map(n => {
+        let iconName = 'bell';
+        if (n.type === 'success') iconName = 'check-circle';
+        if (n.type === 'info') iconName = 'user-plus';
+        if (n.type === 'warning') iconName = 'alert-triangle';
+        
+        return `
+            <div class="notification-item" data-target="${n.target}">
+                <div class="notification-item-icon ${n.type}">
+                    <i data-lucide="${iconName}"></i>
+                </div>
+                <div class="notification-item-content">
+                    <span class="notification-item-text">${n.text}</span>
+                    <span class="notification-item-time">${n.time}</span>
+                </div>
+            </div>
+        `;
+    }).join('');
+    
+    try { if (typeof lucide !== 'undefined') lucide.createIcons(); } catch(e){}
+    
+    list.querySelectorAll('.notification-item').forEach(item => {
+        item.addEventListener('click', () => {
+            const target = item.dataset.target;
+            adminShowTab(target);
+            dropdown.style.display = 'none';
+        });
+    });
+}
+
+// ==========================================================================
+// RENDER ADMIN ORDERS
+// ==========================================================================
+function renderAdminOrdersTable() {
+    const tableBody = document.getElementById('admin-orders-table-body');
+    const countText = document.getElementById('admin-orders-count-text');
+    if (!tableBody) return;
+    
+    tableBody.innerHTML = '';
+    const ordersCount = state.orders.length;
+    if (countText) {
+        countText.textContent = ordersCount === 1 ? '1 pedido cadastrado' : `${ordersCount} pedidos cadastrados`;
+    }
+    
+    if (ordersCount === 0) {
+        tableBody.innerHTML = `<tr><td colspan="6" style="text-align:center; color:var(--text-light)">Nenhum pedido realizado ainda.</td></tr>`;
+        return;
+    }
+    
+    [...state.orders].reverse().forEach(order => {
+        const tr = document.createElement('tr');
+        tr.setAttribute('data-order-id', order.id);
+        
+        const itemsList = order.items.map(it => `${it.qty}x ${it.name}`).join('<br>');
+        
+        tr.innerHTML = `
+            <td><strong>#${order.id}</strong></td>
+            <td>${order.email}</td>
+            <td>${order.date}</td>
+            <td style="font-size:12px; color:var(--text-muted); line-height:1.3">${itemsList}</td>
+            <td><strong style="color:var(--primary)">R$ ${order.total.toFixed(2)}</strong></td>
+            <td><span class="admin-badge-indicator" style="background-color:#ecfdf5; color:#047857">Aprovado</span></td>
+        `;
+        tableBody.appendChild(tr);
+    });
 }
