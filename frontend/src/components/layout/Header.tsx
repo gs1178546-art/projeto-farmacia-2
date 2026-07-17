@@ -1,211 +1,148 @@
 'use client';
 
+import React, { useState } from 'react';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
-import { ShoppingCart, User, Package, Plus, Search, X, MapPin } from 'lucide-react';
-import { useState } from 'react';
-import { useCartStore } from '@/store/cartStore';
-import { useAuthStore } from '@/store/authStore';
-import { mockStoreConfig } from '@/mocks/storeConfig';
-import { mockAuthUser, mockAdminUser } from '@/mocks/customers';
-import { PRODUCT_CATEGORIES } from '@/lib/constants';
-import { CartDrawer } from '@/components/cart/CartDrawer';
-import { Modal } from '@/components/ui/Modal';
-import { Button } from '@/components/ui/Button';
-import { Input } from '@/components/ui/Input';
+import { ShoppingBag, Search, User, Menu, X, ArrowRight, ShieldCheck } from 'lucide-react';
+import { useCart } from '../../hooks/useCart';
+import { useAuth } from '../../hooks/useAuth';
+import { useStoreConfigStore } from '../../store/storeConfigStore';
+import Button from '../ui/Button';
 
 interface HeaderProps {
-  onSearch?: (query: string) => void;
-  onCategoryChange?: (category: string) => void;
-  activeCategory?: string;
+  onCartOpen: () => void;
 }
 
-export function Header({ onSearch, onCategoryChange, activeCategory = 'todos' }: HeaderProps) {
-  const router = useRouter();
-  const { getTotalItems, isOpen, openCart, closeCart } = useCartStore();
-  const { user, login, logout, isAdmin } = useAuthStore();
+export const Header: React.FC<HeaderProps> = ({ onCartOpen }) => {
+  const { totalItems } = useCart();
+  const { user, isAuthenticated, logout } = useAuth();
+  const { config } = useStoreConfigStore();
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
-  const [loginOpen, setLoginOpen] = useState(false);
-  const [loginEmail, setLoginEmail] = useState('');
-  const [loginPassword, setLoginPassword] = useState('');
-  const [loginError, setLoginError] = useState('');
-  const [cepOpen, setCepOpen] = useState(false);
-  const [cep, setCep] = useState('');
-
-  const totalItems = getTotalItems();
-
-  function handleSearch(val: string) {
-    setSearchQuery(val);
-    onSearch?.(val);
-  }
-
-  function handleLogin(e: React.FormEvent) {
-    e.preventDefault();
-    setLoginError('');
-    if (loginEmail === 'admin@biosaude.com' && loginPassword === 'admin123') {
-      login({ ...mockAdminUser, token: 'mock-token' });
-      setLoginOpen(false);
-      router.push('/admin');
-    } else if (loginEmail && loginPassword) {
-      login({ ...mockAuthUser, token: 'mock-token' });
-      setLoginOpen(false);
-    } else {
-      setLoginError('E-mail ou senha inválidos.');
-    }
-  }
-
-  function handleAccountClick() {
-    if (user) {
-      logout();
-    } else {
-      setLoginOpen(true);
-    }
-  }
 
   return (
-    <>
-      <header className="fixed top-0 left-0 right-0 z-40 bg-white/95 backdrop-blur-md border-b border-gray-100 shadow-sm">
-        {/* Main header row */}
-        <div className="max-w-7xl mx-auto px-4 py-3 flex items-center gap-4">
-          {/* Logo */}
-          <Link href="/" className="flex items-center gap-2 shrink-0">
-            <div className="w-9 h-9 bg-gradient-to-br from-primary-600 to-primary-700 rounded-xl flex items-center justify-center text-white shadow-sm">
-              <Plus size={18} strokeWidth={3} />
-            </div>
-            <span className="text-xl font-800 text-gray-900 hidden sm:block">
-              Bio<span className="text-primary-600">Saúde</span>
-            </span>
-          </Link>
+    <header className="sticky top-0 z-40 w-full bg-white border-b border-slate-100 shadow-xs">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="flex items-center justify-between h-16 gap-4">
+          
+          {/* Logo & Mobile trigger */}
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+              className="lg:hidden p-2 rounded-lg text-slate-500 hover:bg-slate-50 cursor-pointer"
+            >
+              {mobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
+            </button>
+            <Link href="/" className="flex items-center gap-2 font-bold text-teal-800 text-lg">
+              <span className="p-1.5 bg-teal-100 rounded-lg text-teal-700">🏥</span>
+              <span>{config.branding.name}</span>
+            </Link>
+          </div>
 
-          {/* Search */}
-          <div className="flex-1 max-w-xl relative">
-            <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+          {/* Search bar */}
+          <div className="hidden md:flex flex-1 max-w-md relative">
             <input
               type="text"
-              placeholder="Buscar medicamentos, vitaminas, beleza..."
+              placeholder="Buscar medicamentos, cosméticos e vitaminas..."
               value={searchQuery}
-              onChange={(e) => handleSearch(e.target.value)}
-              className="w-full pl-9 pr-9 py-2.5 bg-gray-50 border border-gray-200 rounded-2xl text-sm text-gray-900 placeholder:text-gray-400 focus:outline-none focus:border-primary-600 focus:bg-white focus:ring-2 focus:ring-primary-600/10 transition-all"
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="w-full pl-10 pr-4 py-2 text-sm bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-teal-500 focus:bg-white transition-all placeholder:text-slate-400"
             />
-            {searchQuery && (
-              <button
-                onClick={() => handleSearch('')}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-red-500 transition-colors"
-              >
-                <X size={14} />
-              </button>
-            )}
+            <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-3" />
           </div>
 
-          {/* Actions */}
-          <div className="flex items-center gap-1 shrink-0">
-            <button
-              onClick={handleAccountClick}
-              className="flex items-center gap-2 px-3 py-2 rounded-xl text-sm font-600 text-gray-600 hover:bg-gray-100 hover:text-gray-900 transition-colors"
-            >
-              <User size={18} />
-              <span className="hidden md:block">{user ? user.name.split(' ')[0] : 'Entrar'}</span>
-            </button>
-            {user && (
-              <Link
-                href="/conta/pedidos"
-                className="flex items-center gap-2 px-3 py-2 rounded-xl text-sm font-600 text-gray-600 hover:bg-gray-100 hover:text-gray-900 transition-colors"
-              >
-                <Package size={18} />
-                <span className="hidden md:block">Pedidos</span>
+          {/* Right Action Buttons */}
+          <div className="flex items-center gap-4">
+            {/* Admin shortcut */}
+            <Link href="/admin" className="hidden lg:flex items-center gap-1.5 text-xs font-semibold text-slate-500 hover:text-teal-700 transition-colors">
+              <ShieldCheck className="w-4 h-4" />
+              Painel Admin
+            </Link>
+
+            {/* Loyalty/User Area */}
+            {isAuthenticated ? (
+              <div className="flex items-center gap-3">
+                <Link 
+                  href="/conta" 
+                  className="flex items-center gap-2 text-sm font-medium text-slate-700 hover:text-teal-700 transition-colors"
+                >
+                  <div className="w-8 h-8 rounded-full bg-teal-50 text-teal-700 flex items-center justify-center font-bold text-xs uppercase">
+                    {user?.name ? user.name[0] : 'U'}
+                  </div>
+                  <div className="hidden lg:flex flex-col text-left">
+                    <span className="text-xs leading-none font-bold text-slate-800">{user?.name}</span>
+                    <span className="text-[10px] text-emerald-600 font-semibold mt-0.5">R$ {user?.cashbackBalance.toFixed(2)} saldo</span>
+                  </div>
+                </Link>
+                <button
+                  onClick={logout}
+                  className="text-xs text-red-500 hover:underline cursor-pointer"
+                >
+                  Sair
+                </button>
+              </div>
+            ) : (
+              <Link href="/conta">
+                <Button variant="ghost" size="sm" className="hidden sm:inline-flex gap-1.5">
+                  <User className="w-4 h-4" />
+                  Entrar / Registrar
+                </Button>
               </Link>
             )}
+
+            {/* Shopping Cart Button */}
             <button
-              onClick={openCart}
-              className="flex items-center gap-2 px-3 py-2 rounded-xl text-sm font-600 text-gray-600 hover:bg-gray-100 hover:text-gray-900 transition-colors relative"
+              onClick={onCartOpen}
+              className="relative p-2.5 bg-teal-50 hover:bg-teal-100/80 rounded-xl text-teal-700 transition-colors cursor-pointer"
             >
-              <div className="relative">
-                <ShoppingCart size={18} />
-                {totalItems > 0 && (
-                  <span className="absolute -top-2 -right-2 min-w-[18px] h-[18px] flex items-center justify-center bg-red-600 text-white text-[10px] font-800 rounded-full px-1 border-2 border-white">
-                    {totalItems > 99 ? '99+' : totalItems}
-                  </span>
-                )}
-              </div>
-              <span className="hidden md:block">Carrinho</span>
+              <ShoppingBag className="w-5 h-5" />
+              {totalItems > 0 && (
+                <span className="absolute -top-1.5 -right-1.5 bg-amber-500 text-white text-[10px] font-bold w-5 h-5 rounded-full flex items-center justify-center border border-white">
+                  {totalItems}
+                </span>
+              )}
             </button>
           </div>
+
         </div>
+      </div>
 
-        {/* Sub-header: CEP + categories */}
-        <div className="border-t border-gray-100 bg-white">
-          <div className="max-w-7xl mx-auto px-4 py-1.5 flex items-center gap-4">
-            <button
-              onClick={() => setCepOpen(true)}
-              className="flex items-center gap-1.5 text-xs text-gray-500 hover:text-primary-600 transition-colors shrink-0 border border-gray-200 rounded-md px-2.5 py-1.5 hover:bg-primary-50 hover:border-primary-200"
-            >
-              <MapPin size={12} className="text-primary-600" />
-              <span>Entregar em: <strong className="text-gray-700">{cep || 'Selecionar CEP'}</strong></span>
-            </button>
-            <nav className="flex items-center gap-1.5 overflow-x-auto scrollbar-none">
-              {PRODUCT_CATEGORIES.map((cat) => (
-                <button
-                  key={cat.value}
-                  onClick={() => onCategoryChange?.(cat.value)}
-                  className={`shrink-0 px-3 py-1.5 rounded-2xl text-xs font-600 border transition-all ${
-                    activeCategory === cat.value
-                      ? 'bg-primary-600 text-white border-primary-600'
-                      : 'bg-gray-50 text-gray-500 border-gray-200 hover:bg-gray-100 hover:text-gray-800'
-                  }`}
-                >
-                  {cat.label}
-                </button>
-              ))}
-            </nav>
-          </div>
-        </div>
-      </header>
-
-      {/* Cart Drawer */}
-      <CartDrawer isOpen={isOpen} onClose={closeCart} />
-
-      {/* Login Modal */}
-      <Modal isOpen={loginOpen} onClose={() => setLoginOpen(false)} title="Acessar Minha Conta" size="sm">
-        <form onSubmit={handleLogin} className="flex flex-col gap-4">
-          <p className="text-sm text-gray-500">
-            Use <strong>admin@biosaude.com</strong> / <strong>admin123</strong> para acessar o painel admin.
-          </p>
-          <Input
-            label="E-mail"
-            type="email"
-            placeholder="seu@email.com"
-            value={loginEmail}
-            onChange={(e) => setLoginEmail(e.target.value)}
-            required
+      {/* Mobile search bar */}
+      <div className="md:hidden px-4 pb-3 flex">
+        <div className="w-full relative">
+          <input
+            type="text"
+            placeholder="O que você está procurando hoje?"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="w-full pl-10 pr-4 py-2 text-sm bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-teal-500 focus:bg-white transition-all placeholder:text-slate-400"
           />
-          <Input
-            label="Senha"
-            type="password"
-            placeholder="Sua senha"
-            value={loginPassword}
-            onChange={(e) => setLoginPassword(e.target.value)}
-            required
-          />
-          {loginError && <p className="text-sm text-red-600">{loginError}</p>}
-          <Button type="submit" className="w-full" size="lg">Entrar</Button>
-        </form>
-      </Modal>
-
-      {/* CEP Modal */}
-      <Modal isOpen={cepOpen} onClose={() => setCepOpen(false)} title="Onde quer receber?" size="sm">
-        <div className="flex flex-col gap-4">
-          <p className="text-sm text-gray-500">Digite seu CEP para ver prazos e disponibilidade na sua região.</p>
-          <div className="flex gap-2">
-            <Input
-              placeholder="00000-000"
-              value={cep}
-              onChange={(e) => setCep(e.target.value.replace(/\D/g, '').replace(/(\d{5})(\d)/, '$1-$2').slice(0, 9))}
-              className="flex-1"
-            />
-            <Button onClick={() => setCepOpen(false)} disabled={cep.length < 9}>Confirmar</Button>
-          </div>
+          <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-3" />
         </div>
-      </Modal>
-    </>
+      </div>
+
+      {/* Mobile Menu Dropdown */}
+      {mobileMenuOpen && (
+        <div className="lg:hidden border-t border-slate-100 bg-white py-4 px-4 flex flex-col gap-3 shadow-inner">
+          <Link href="/" onClick={() => setMobileMenuOpen(false)} className="text-sm font-semibold text-slate-700 py-1 hover:text-teal-700">
+            Página Inicial
+          </Link>
+          <Link href="/conta" onClick={() => setMobileMenuOpen(false)} className="text-sm font-semibold text-slate-700 py-1 hover:text-teal-700">
+            Minha Conta
+          </Link>
+          <Link href="/conta/pedidos" onClick={() => setMobileMenuOpen(false)} className="text-sm font-semibold text-slate-700 py-1 hover:text-teal-700">
+            Meus Pedidos
+          </Link>
+          <Link href="/conta/fidelidade" onClick={() => setMobileMenuOpen(false)} className="text-sm font-semibold text-slate-700 py-1 hover:text-teal-700">
+            Programa de Cashback
+          </Link>
+          <Link href="/admin" onClick={() => setMobileMenuOpen(false)} className="text-sm font-semibold text-teal-700 py-1 flex items-center gap-1.5">
+            <ShieldCheck className="w-4 h-4" />
+            Painel Admin
+          </Link>
+        </div>
+      )}
+    </header>
   );
-}
+};
+
+export default Header;

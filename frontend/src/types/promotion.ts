@@ -1,15 +1,13 @@
-export type PromotionType = 'discount' | 'bogo' | 'cashback';
+export type PromotionType = 'discount' | 'bogo' | 'cashback_multiplier';
 
 export interface Promotion {
   id: string;
-  storeId: string;
-  productId: string;
+  name: string;
+  description: string;
   type: PromotionType;
-  value: number;       // % para discount, R$ para cashback
-  valueTake?: number;  // bogo: leve X
-  valuePay?: number;   // bogo: pague Y
+  value: number; // Porcentagem de desconto, quantidade BOGO ou multiplicador
   active: boolean;
-  startsAt?: string;
-  endsAt?: string;
-  createdAt: string;
+  startDate?: string;
+  endDate?: string;
+  applicableProductIds?: string[]; // Se vazio, aplica-se a toda a loja
 }

@@ -1,36 +1,38 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
-import { AuthUser } from '@/types/customer';
+import { Customer } from '../types/customer';
 
-interface AuthStore {
-  user: AuthUser | null;
-  isLoading: boolean;
-  login: (user: AuthUser) => void;
+interface AuthState {
+  user: Customer | null;
+  isAdmin: boolean;
+  token: string | null;
+  login: (customer: Customer, token: string) => void;
+  loginAsAdmin: (token: string) => void;
   logout: () => void;
-  updateBalance: (balance: number) => void;
-  isAdmin: () => boolean;
+  updateCashbackBalance: (amount: number) => void;
 }
 
-export const useAuthStore = create<AuthStore>()(
+export const useAuthStore = create<AuthState>()(
   persist(
-    (set, get) => ({
+    (set) => ({
       user: null,
-      isLoading: false,
-
-      login: (user) => set({ user }),
-
-      logout: () => set({ user: null }),
-
-      updateBalance: (balance) => {
-        const { user } = get();
-        if (user) set({ user: { ...user, loyaltyBalance: balance } });
-      },
-
-      isAdmin: () => {
-        const { user } = get();
-        return user?.role === 'admin' || user?.role === 'super_admin';
-      },
+      isAdmin: false,
+      token: null,
+      login: (customer, token) => set({ user: customer, isAdmin: false, token }),
+      loginAsAdmin: (token) => set({ user: null, isAdmin: true, token }),
+      logout: () => set({ user: null, isAdmin: false, token: null }),
+      updateCashbackBalance: (amount) => set((state) => {
+        if (!state.user) return {};
+        return {
+          user: {
+            ...state.user,
+            cashbackBalance: amount
+          }
+        };
+      })
     }),
-    { name: 'farmacia-auth' }
+    {
+      name: 'biosaude-auth-storage'
+    }
   )
 );

@@ -1,47 +1,21 @@
 import { create } from 'zustand';
-import { Order, OrderStatus } from '@/types/order';
-import { mockOrders } from '@/mocks/orders';
+import { Order, OrderStatus } from '../types/order';
+import { mockOrders } from '../mocks/orders';
 
-interface OrdersStore {
+interface OrdersState {
   orders: Order[];
-  newOrderAlert: Order | null;
   setOrders: (orders: Order[]) => void;
-  addOrder: (order: Order) => void;
   updateOrderStatus: (orderId: string, status: OrderStatus) => void;
-  dismissAlert: () => void;
-  getPendingOrders: () => Order[];
-  getActiveOrders: () => Order[];
+  addOrder: (order: Order) => void;
 }
 
-export const useOrdersStore = create<OrdersStore>((set, get) => ({
+export const useOrdersStore = create<OrdersState>((set) => ({
   orders: mockOrders,
-  newOrderAlert: null,
-
   setOrders: (orders) => set({ orders }),
-
-  addOrder: (order) => {
-    set((state) => ({
-      orders: [order, ...state.orders],
-      newOrderAlert: order,
-    }));
-  },
-
-  updateOrderStatus: (orderId, status) => {
-    set((state) => ({
-      orders: state.orders.map((o) =>
-        o.id === orderId
-          ? { ...o, status, updatedAt: new Date().toISOString() }
-          : o
-      ),
-    }));
-  },
-
-  dismissAlert: () => set({ newOrderAlert: null }),
-
-  getPendingOrders: () => get().orders.filter((o) => o.status === 'pending'),
-
-  getActiveOrders: () =>
-    get().orders.filter((o) =>
-      ['accepted', 'preparing', 'shipped'].includes(o.status)
-    ),
+  updateOrderStatus: (orderId, status) => set((state) => ({
+    orders: state.orders.map((o) => o.id === orderId ? { ...o, status, updatedAt: new Date().toISOString() } : o)
+  })),
+  addOrder: (order) => set((state) => ({
+    orders: [order, ...state.orders]
+  }))
 }));

@@ -1,30 +1,27 @@
-export interface StoreConfig {
-  id: string;
-  storeId: string;
+export interface StoreBranding {
   name: string;
   logoUrl?: string;
-  faviconUrl?: string;
-  primaryColor: string;
+  primaryColor: string; // Hexadecimal ou classe Tailwind CSS
   secondaryColor: string;
-  primaryHover: string;
-  customDomain?: string;
-  subdomain: string;
-  // ANVISA obrigatório
-  razaoSocial: string;
+  themeMode: 'light' | 'dark' | 'custom';
+}
+
+export interface StoreAnvisa {
+  corporateName: string; // Razão Social
   cnpj: string;
-  ie?: string;
+  pharmacistInCharge: string; // Farmacêutico Responsável
+  pharmacistCrf: string; // CRF do farmacêutico
+  afeNumber: string; // Autorização de Funcionamento (AFE) da ANVISA
+  licenseNumber: string; // Licença Sanitária Municipal/Estadual
   address: string;
-  pharmacist: string;
-  crf: string;
-  afe: string;
-  ae?: string;
-  // Contato
-  whatsapp?: string;
-  email?: string;
-  // Entrega
+}
+
+export interface StoreConfig {
+  id: string;
+  subdomain: string;
+  branding: StoreBranding;
+  anvisa: StoreAnvisa;
   deliveryFee: number;
-  freeDeliveryAbove?: number;
-  estimatedDeliveryMinutes: number;
-  createdAt: string;
-  updatedAt: string;
+  minOrderValue: number;
+  active: boolean;
 }

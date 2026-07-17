@@ -1,26 +1,25 @@
-import { StoreConfig } from '@/types/store';
+import { StoreConfig } from '../types/store';
 
 export const mockStoreConfig: StoreConfig = {
-  id: 'config_1',
-  storeId: 'store_1',
-  name: 'BioSaúde Premium',
-  primaryColor: '#0d9488',
-  secondaryColor: '#0f172a',
-  primaryHover: '#0f766e',
-  subdomain: 'biosaude',
-  razaoSocial: 'BioSaúde Distribuidora de Medicamentos Ltda.',
-  cnpj: '12.345.678/0001-90',
-  ie: '111.222.333.444',
-  address: 'Av. da Saúde, 1000 - Jardim Clímaco, São Paulo - SP, CEP: 04230-000',
-  pharmacist: 'Dra. Beatriz Martins de Souza',
-  crf: 'CRF/SP nº 45.892',
-  afe: '7.12345.6',
-  ae: '1.09876.5',
-  whatsapp: '(11) 99999-0000',
-  email: 'contato@biosaude.com.br',
-  deliveryFee: 8.90,
-  freeDeliveryAbove: 79.00,
-  estimatedDeliveryMinutes: 45,
-  createdAt: '2026-01-01T10:00:00Z',
-  updatedAt: '2026-07-01T10:00:00Z',
+  id: 'store-1',
+  subdomain: 'biosaude-matriz',
+  branding: {
+    name: 'BioSaúde Farmácia',
+    logoUrl: '/images/logo-placeholder.png',
+    primaryColor: '#0f766e', // Teal 700
+    secondaryColor: '#0d9488', // Teal 600
+    themeMode: 'light'
+  },
+  anvisa: {
+    corporateName: 'BioSaúde Drogarias e Perfumaria Ltda',
+    cnpj: '12.345.678/0001-99',
+    pharmacistInCharge: 'Dra. Ana Paula Medeiros',
+    pharmacistCrf: 'CRF-SP 45678',
+    afeNumber: '7.12345.6',
+    licenseNumber: 'L-SP-998877',
+    address: 'Av. Paulista, 1000 - Bela Vista, São Paulo - SP, CEP 01310-100'
+  },
+  deliveryFee: 7.00,
+  minOrderValue: 20.00,
+  active: true
 };

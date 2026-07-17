@@ -1,49 +1,24 @@
-import { CarouselSlide } from '@/types/carousel';
+import { CarouselSlide } from '../types/carousel';
 
 export const mockCarouselSlides: CarouselSlide[] = [
   {
-    id: 'slide_1',
-    storeId: 'store_1',
-    title: 'Entrega Rápida em Minutos',
-    subtitle: 'Compre medicamentos e itens essenciais e receba em casa. Frete grátis acima de R$ 79.',
-    buttonText: 'Aproveitar Agora',
-    buttonLink: '#vitrine',
-    gradientFrom: '#00A86B',
-    gradientTo: '#0056B3',
-    icon: 'truck',
+    id: 'slide-1',
+    title: 'Cuidado Completo para Sua Saúde',
+    subtitle: 'Medicamentos, vitaminas e dermocosméticos com entrega super rápida.',
+    imageUrl: 'https://images.unsplash.com/photo-1586015555751-63bb77f4322a?w=1200&auto=format&fit=crop&q=80',
+    linkUrl: '/#produtos',
+    backgroundColor: '#0f766e', // Teal 700
     active: true,
-    order: 0,
-    createdAt: '2026-07-01T10:00:00Z',
-    updatedAt: '2026-07-01T10:00:00Z',
+    order: 1
   },
   {
-    id: 'slide_2',
-    storeId: 'store_1',
-    title: 'Mais Energia para o Seu Dia',
-    subtitle: 'Até 30% de desconto na linha completa de vitaminas de A a Z e suplementos premium.',
-    buttonText: 'Ver Ofertas',
-    buttonLink: '#vitrine',
-    gradientFrom: '#FF9500',
-    gradientTo: '#FF3B30',
-    icon: 'activity',
+    id: 'slide-2',
+    title: 'Programa de Fidelidade BioSaúde',
+    subtitle: 'Cadastre-se e ganhe 5% de cashback em todas as suas compras na farmácia.',
+    imageUrl: 'https://images.unsplash.com/photo-1550572017-edd951b55104?w=1200&auto=format&fit=crop&q=80',
+    linkUrl: '/conta/fidelidade',
+    backgroundColor: '#0369a1', // Sky 700
     active: true,
-    order: 1,
-    createdAt: '2026-07-01T10:00:00Z',
-    updatedAt: '2026-07-01T10:00:00Z',
-  },
-  {
-    id: 'slide_3',
-    storeId: 'store_1',
-    title: 'Programa de Fidelidade',
-    subtitle: 'Ganhe 5% de cashback em cada compra e use como desconto nos próximos pedidos.',
-    buttonText: 'Saiba Mais',
-    buttonLink: '/conta/fidelidade',
-    gradientFrom: '#7C3AED',
-    gradientTo: '#2563EB',
-    icon: 'gift',
-    active: true,
-    order: 2,
-    createdAt: '2026-07-05T10:00:00Z',
-    updatedAt: '2026-07-05T10:00:00Z',
-  },
+    order: 2
+  }
 ];

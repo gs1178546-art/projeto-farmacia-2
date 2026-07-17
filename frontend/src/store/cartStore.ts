@@ -1,72 +1,77 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
-import { CartItem } from '@/types/cart';
 
-interface CartStore {
+export interface CartItem {
+  id: string; // SKU or Product ID
+  productId: string;
+  name: string;
+  price: number;
+  quantity: number;
+  image: string;
+  requiresPrescription: boolean;
+}
+
+interface CartState {
   items: CartItem[];
-  isOpen: boolean;
-  addItem: (item: CartItem) => void;
+  addItem: (product: { id: string; name: string; price: number; image: string; requiresPrescription: boolean }, qty?: number) => void;
   removeItem: (productId: string) => void;
   updateQuantity: (productId: string, quantity: number) => void;
   clearCart: () => void;
-  openCart: () => void;
-  closeCart: () => void;
-  getSubtotal: () => number;
-  getTotalItems: () => number;
+  subtotal: () => number;
 }
 
-export const useCartStore = create<CartStore>()(
+export const useCartStore = create<CartState>()(
   persist(
     (set, get) => ({
       items: [],
-      isOpen: false,
-
-      addItem: (newItem) => {
+      addItem: (product, qty = 1) => {
         set((state) => {
-          const existing = state.items.find((i) => i.productId === newItem.productId);
-          if (existing) {
-            return {
-              items: state.items.map((i) =>
-                i.productId === newItem.productId
-                  ? { ...i, quantity: i.quantity + 1 }
-                  : i
-              ),
-            };
+          const existingIndex = state.items.findIndex((item) => item.productId === product.id);
+          if (existingIndex >= 0) {
+            const updatedItems = [...state.items];
+            updatedItems[existingIndex].quantity += qty;
+            return { items: updatedItems };
           }
-          return { items: [...state.items, { ...newItem, quantity: 1 }] };
+          return {
+            items: [
+              ...state.items,
+              {
+                id: product.id,
+                productId: product.id,
+                name: product.name,
+                price: product.price,
+                quantity: qty,
+                image: product.image,
+                requiresPrescription: product.requiresPrescription
+              }
+            ]
+          };
         });
       },
-
       removeItem: (productId) => {
         set((state) => ({
-          items: state.items.filter((i) => i.productId !== productId),
+          items: state.items.filter((item) => item.productId !== productId)
         }));
       },
-
       updateQuantity: (productId, quantity) => {
-        if (quantity <= 0) {
-          get().removeItem(productId);
-          return;
-        }
-        set((state) => ({
-          items: state.items.map((i) =>
-            i.productId === productId ? { ...i, quantity } : i
-          ),
-        }));
+        set((state) => {
+          if (quantity <= 0) {
+            return { items: state.items.filter((item) => item.productId !== productId) };
+          }
+          return {
+            items: state.items.map((item) =>
+              item.productId === productId ? { ...item, quantity } : item
+            )
+          };
+        });
       },
-
       clearCart: () => set({ items: [] }),
-      openCart: () => set({ isOpen: true }),
-      closeCart: () => set({ isOpen: false }),
-
-      getSubtotal: () => {
-        return get().items.reduce((sum, item) => sum + item.unitPrice * item.quantity, 0);
-      },
-
-      getTotalItems: () => {
-        return get().items.reduce((sum, item) => sum + item.quantity, 0);
-      },
+      subtotal: () => {
+        return get().items.reduce((total, item) => total + item.price * item.quantity, 0);
+      }
     }),
-    { name: 'farmacia-cart' }
+    {
+      name: 'biosaude-cart-storage'
+    }
   )
 );

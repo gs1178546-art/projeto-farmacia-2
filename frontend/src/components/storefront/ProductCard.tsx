@@ -1,120 +1,100 @@
 'use client';
 
-import { ShoppingCart, Check, Tag, Gift } from 'lucide-react';
-import { useState } from 'react';
-import { Product } from '@/types/product';
-import { Promotion } from '@/types/promotion';
-import { useCartStore } from '@/store/cartStore';
-import { formatCurrency } from '@/lib/utils';
-import { cn } from '@/lib/utils';
+import React from 'react';
+import Link from 'next/link';
+import { ShoppingCart, Heart, ShieldAlert } from 'lucide-react';
+import { Product } from '../../types/product';
+import { useCart } from '../../hooks/useCart';
+import { useToast } from '../ui/Toast';
+import Button from '../ui/Button';
 
 interface ProductCardProps {
   product: Product;
-  promotion?: Promotion;
 }
 
-export function ProductCard({ product, promotion }: ProductCardProps) {
-  const { addItem, openCart } = useCartStore();
-  const [added, setAdded] = useState(false);
+export const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
+  const { addItem } = useCart();
+  const { toast } = useToast();
 
-  const effectivePrice = promotion?.type === 'discount'
-    ? product.priceOriginal * (1 - promotion.value / 100)
-    : product.priceCurrent;
-
-  const displayDiscount = promotion?.type === 'discount' ? promotion.value : product.discount;
-  const hasDiscount = displayDiscount > 0;
-  const isBogo = promotion?.type === 'bogo' || product.leve3Pague2;
-  const isCashback = promotion?.type === 'cashback';
-
-  function handleAddToCart() {
-    addItem({
-      productId: product.id,
-      name: product.name,
-      image: product.image,
-      brand: product.brand,
-      quantity: 1,
-      unitPrice: effectivePrice,
-      priceOriginal: hasDiscount ? product.priceOriginal : undefined,
-      discount: displayDiscount,
-      leve3Pague2: isBogo,
-      promoType: promotion?.type,
+  const handleAddToCart = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    
+    addItem(product);
+    toast({
+      type: 'success',
+      title: 'Adicionado ao carrinho',
+      description: `${product.name} foi adicionado com sucesso.`
     });
-    setAdded(true);
-    setTimeout(() => {
-      setAdded(false);
-      openCart();
-    }, 600);
-  }
+  };
+
+  const finalPrice = product.promoPrice || product.price;
+  const discountPercentage = product.promoPrice 
+    ? Math.round(((product.price - product.promoPrice) / product.price) * 100)
+    : 0;
 
   return (
-    <div className="group bg-white rounded-xl border border-gray-100 shadow-sm hover:shadow-md hover:border-primary-200 transition-all duration-200 hover:-translate-y-0.5 flex flex-col overflow-hidden">
-      {/* Image */}
-      <div className="relative">
-        {hasDiscount && (
-          <span className="absolute top-2 left-2 z-10 bg-red-600 text-white text-[10px] font-700 px-1.5 py-0.5 rounded-md">
-            -{displayDiscount}%
+    <div className="group relative bg-white border border-slate-100 rounded-2xl p-4 flex flex-col gap-3 shadow-xs hover:shadow-md hover:border-slate-200 transition-all duration-300">
+      
+      {/* Discount & Prescription Badges */}
+      <div className="absolute top-3 left-3 z-10 flex flex-col gap-1.5">
+        {discountPercentage > 0 && (
+          <span className="px-2 py-0.5 bg-rose-500 text-white text-[10px] font-bold rounded-md">
+            -{discountPercentage}% Off
           </span>
         )}
-        <div className="h-36 bg-gray-50 flex items-center justify-center overflow-hidden">
-          <img
-            src={product.image}
-            alt={product.name}
-            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-          />
-        </div>
+        {product.requiresPrescription && (
+          <span className="px-2 py-0.5 bg-red-100 text-red-700 border border-red-200 text-[9px] font-bold rounded-md flex items-center gap-1">
+            <ShieldAlert className="w-3 h-3" />
+            Receita Obrigatória
+          </span>
+        )}
       </div>
 
-      {/* Content */}
-      <div className="p-3 flex flex-col flex-1 gap-2">
-        <div className="flex-1">
-          <p className="text-[10px] font-700 text-gray-400 uppercase tracking-wide">{product.brand}</p>
-          <h4 className="text-sm font-600 text-gray-900 line-clamp-2 mt-0.5 leading-snug">{product.name} — {product.quantity}</h4>
+      {/* Image container */}
+      <Link href={`/produto/${product.slug}`} className="w-full aspect-square rounded-xl overflow-hidden bg-slate-50 relative block">
+        <img
+          src={product.image}
+          alt={product.name}
+          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+        />
+      </Link>
 
-          {/* Promo badges */}
-          <div className="flex flex-wrap gap-1 mt-1.5">
-            {product.type === 'generico' && !isBogo && !isCashback && (
-              <span className="text-[9px] font-700 px-1.5 py-0.5 bg-gray-100 text-gray-500 rounded-md">Genérico</span>
-            )}
-            {isBogo && (
-              <span className="text-[9px] font-700 px-1.5 py-0.5 bg-yellow-100 text-yellow-800 rounded-md flex items-center gap-0.5">
-                <Tag size={9} />
-                Leve {promotion?.valueTake ?? 3} Pague {promotion?.valuePay ?? 2}
-              </span>
-            )}
-            {isCashback && (
-              <span className="text-[9px] font-700 px-1.5 py-0.5 bg-green-100 text-green-800 rounded-md flex items-center gap-0.5">
-                <Gift size={9} />
-                Cashback R$ {promotion!.value.toFixed(2)}
-              </span>
-            )}
-          </div>
-        </div>
+      {/* Product metadata */}
+      <div className="flex flex-col gap-1 flex-1">
+        <span className="text-[10px] uppercase font-bold text-slate-400 tracking-wider">
+          {product.category}
+        </span>
+        <Link href={`/produto/${product.slug}`} className="text-sm font-bold text-slate-800 line-clamp-2 hover:text-teal-700 transition-colors">
+          {product.name}
+        </Link>
+      </div>
 
-        {/* Price */}
-        <div className="flex flex-col gap-0.5">
-          {hasDiscount && (
-            <span className="text-[11px] text-gray-400 line-through">{formatCurrency(product.priceOriginal)}</span>
+      {/* Pricing and Buying CTA */}
+      <div className="flex items-end justify-between pt-2 border-t border-slate-50">
+        <div className="flex flex-col">
+          {product.promoPrice && (
+            <span className="text-xs text-slate-400 line-through">
+              R$ {product.price.toFixed(2)}
+            </span>
           )}
-          <div className="flex items-baseline gap-1">
-            <span className="text-xs text-gray-500">R$</span>
-            <span className="text-lg font-800 text-gray-900">{effectivePrice.toFixed(2).replace('.', ',')}</span>
-          </div>
+          <span className="text-base font-extrabold text-teal-800">
+            R$ {finalPrice.toFixed(2)}
+          </span>
         </div>
-
-        {/* Add to cart button */}
-        <button
+        
+        <Button 
           onClick={handleAddToCart}
-          className={cn(
-            'mt-auto w-full flex items-center justify-center gap-2 py-2 rounded-xl text-sm font-700 transition-all duration-150',
-            added
-              ? 'bg-green-500 text-white'
-              : 'bg-primary-600 text-white hover:bg-primary-700 active:scale-95'
-          )}
+          variant="primary" 
+          size="sm" 
+          className="rounded-xl p-2.5"
         >
-          {added ? <Check size={16} /> : <ShoppingCart size={16} />}
-          {added ? 'Adicionado!' : 'Comprar'}
-        </button>
+          <ShoppingCart className="w-4 h-4" />
+        </Button>
       </div>
+
     </div>
   );
-}
+};
+
+export default ProductCard;

@@ -1,41 +1,41 @@
-'use client';
+import React from 'react';
 
-import { cn } from '@/lib/utils';
-import { InputHTMLAttributes, forwardRef } from 'react';
-
-interface InputProps extends InputHTMLAttributes<HTMLInputElement> {
+export interface InputProps extends React.InputHTMLAttributes<HTMLInputElement> {
   label?: string;
   error?: string;
-  hint?: string;
+  helperText?: string;
 }
 
-export const Input = forwardRef<HTMLInputElement, InputProps>(
-  ({ className, label, error, hint, id, ...props }, ref) => {
+export const Input = React.forwardRef<HTMLInputElement, InputProps>(
+  ({ className = '', label, error, helperText, type = 'text', id, ...props }, ref) => {
+    const inputId = id || `input-${Math.random().toString(36).substr(2, 9)}`;
+    
     return (
-      <div className="flex flex-col gap-1.5">
+      <div className="w-full flex flex-col gap-1.5">
         {label && (
-          <label htmlFor={id} className="text-sm font-600 text-gray-700">
+          <label htmlFor={inputId} className="text-xs font-semibold text-slate-700">
             {label}
           </label>
         )}
         <input
           ref={ref}
-          id={id}
-          className={cn(
-            'w-full px-3 py-2.5 text-sm bg-white border border-gray-200 rounded-lg',
-            'placeholder:text-gray-400 text-gray-900',
-            'transition-all duration-150',
-            'focus:outline-none focus:border-primary-600 focus:ring-2 focus:ring-primary-600/10',
-            error && 'border-red-500 focus:border-red-500 focus:ring-red-500/10',
-            className
-          )}
+          id={inputId}
+          type={type}
+          className={`w-full px-3 py-2 text-sm bg-white border rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent transition-all placeholder:text-slate-400 ${
+            error ? 'border-red-500 focus:ring-red-500' : 'border-slate-200 focus:ring-teal-500'
+          } ${className}`}
           {...props}
         />
-        {hint && !error && <p className="text-xs text-gray-500">{hint}</p>}
-        {error && <p className="text-xs text-red-600">{error}</p>}
+        {error && (
+          <span className="text-[11px] font-medium text-red-500">{error}</span>
+        )}
+        {!error && helperText && (
+          <span className="text-[11px] text-slate-400">{helperText}</span>
+        )}
       </div>
     );
   }
 );
 
 Input.displayName = 'Input';
+export default Input;

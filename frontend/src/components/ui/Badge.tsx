@@ -1,32 +1,32 @@
-'use client';
+import React from 'react';
 
-import { cn } from '@/lib/utils';
-import { ReactNode } from 'react';
-
-interface BadgeProps {
-  children: ReactNode;
-  variant?: 'green' | 'red' | 'orange' | 'blue' | 'purple' | 'gray' | 'yellow';
-  size?: 'sm' | 'md';
+export interface BadgeProps {
+  children: React.ReactNode;
+  variant?: 'primary' | 'secondary' | 'success' | 'warning' | 'danger' | 'info';
   className?: string;
 }
 
-export function Badge({ children, variant = 'gray', size = 'sm', className }: BadgeProps) {
+export const Badge: React.FC<BadgeProps> = ({
+  children,
+  variant = 'primary',
+  className = ''
+}) => {
+  const baseStyles = 'inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold';
+  
   const variants = {
-    green: 'bg-green-100 text-green-800',
-    red: 'bg-red-100 text-red-800',
-    orange: 'bg-orange-100 text-orange-800',
-    blue: 'bg-blue-100 text-blue-800',
-    purple: 'bg-purple-100 text-purple-800',
-    gray: 'bg-gray-100 text-gray-700',
-    yellow: 'bg-yellow-100 text-yellow-800',
+    primary: 'bg-teal-50 text-teal-700 border border-teal-100',
+    secondary: 'bg-slate-100 text-slate-700 border border-slate-200',
+    success: 'bg-emerald-50 text-emerald-700 border border-emerald-100',
+    warning: 'bg-amber-50 text-amber-700 border border-amber-100',
+    danger: 'bg-red-50 text-red-700 border border-red-100',
+    info: 'bg-sky-50 text-sky-700 border border-sky-100'
   };
-  const sizes = {
-    sm: 'text-xs px-2 py-0.5',
-    md: 'text-sm px-2.5 py-1',
-  };
+
   return (
-    <span className={cn('inline-flex items-center font-700 rounded-md', variants[variant], sizes[size], className)}>
+    <span className={`${baseStyles} ${variants[variant]} ${className}`}>
       {children}
     </span>
   );
-}
+};
+
+export default Badge;
