@@ -279,4 +279,4 @@ npm start  # ou PM2: pm2 start "npm start" --name biosaude-frontend
 
 ## 📞 Contato
 
-Projeto desenvolvido pela **Antigravity**.
+Projeto desenvolvido por **Igor Santos**.
