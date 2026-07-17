@@ -1,0 +1,699 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BioSaúde Premium - Farmácia & Cuidados Diários</title>
+    <meta name="description" content="Sua farmácia online premium. Medicamentos, beleza, cuidados diários e muito mais com entrega rápida e os melhores preços.">
+    <!-- Google Fonts: Plus Jakarta Sans -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="style.css">
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+</head>
+<body>
+
+    <!-- STOREFRONT CONTAINER -->
+    <div id="storefront-view">
+        <!-- FIXED HEADER -->
+        <header class="main-header">
+            <div class="header-container">
+                <!-- Logo -->
+                <a href="#" class="logo">
+                    <div class="logo-icon">
+                        <i data-lucide="plus"></i>
+                    </div>
+                    <span class="logo-text">Bio<span>Saúde</span></span>
+                </a>
+
+                <!-- Search Bar -->
+                <div class="search-wrapper">
+                    <i data-lucide="search" class="search-icon"></i>
+                    <input type="text" id="search-input" placeholder="O que você procura hoje? (ex: dipirona, vitamina, etc.)">
+                    <button class="clear-search-btn" id="clear-search" style="display: none;">
+                        <i data-lucide="x"></i>
+                    </button>
+                </div>
+
+                <!-- Header Actions -->
+                <div class="header-actions">
+                    <button class="action-btn" id="account-btn">
+                        <i data-lucide="user"></i>
+                        <span id="account-btn-text">Minha Conta</span>
+                    </button>
+                    <button class="action-btn" id="orders-btn">
+                        <i data-lucide="package"></i>
+                        <span>Meus Pedidos</span>
+                    </button>
+                    <button class="action-btn cart-toggle-btn" id="cart-btn">
+                        <div class="cart-icon-wrapper">
+                            <i data-lucide="shopping-cart"></i>
+                            <span class="cart-badge" id="cart-count">0</span>
+                        </div>
+                        <span>Carrinho</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Sub-header (CEP & Categories Menu) -->
+            <div class="sub-header">
+                <div class="sub-header-container">
+                    <!-- Delivery Info / CEP -->
+                    <div class="cep-selector" id="cep-trigger">
+                        <i data-lucide="map-pin"></i>
+                        <span>Entregar em: <strong id="current-cep">Selecionar CEP</strong></span>
+                    </div>
+
+                    <!-- Navigation Categories -->
+                    <nav class="categories-nav">
+                        <button class="category-badge active" data-category="todos">Todos</button>
+                        <button class="category-badge" data-category="medicamentos">Medicamentos</button>
+                        <button class="category-badge" data-category="cuidados">Cuidados Diários</button>
+                        <button class="category-badge" data-category="beleza">Beleza</button>
+                        <button class="category-badge" data-category="bebe">Mamãe e Bebê</button>
+                        <button class="category-badge" data-category="vitaminas">Vitaminas</button>
+                        <button class="category-badge" data-category="suplementos">Suplementos</button>
+                    </nav>
+                </div>
+            </div>
+        </header>
+
+        <!-- MAIN CONTENT CONTAINER -->
+        <main class="main-layout">
+            <!-- Sidebar Filters -->
+            <aside class="sidebar-filters">
+                <div class="filter-header">
+                    <h3><i data-lucide="sliders-horizontal"></i> Filtros</h3>
+                    <button id="clear-filters-btn" class="clear-filters-link">Limpar</button>
+                </div>
+
+                <!-- Type Filter -->
+                <div class="filter-group">
+                    <h4 class="filter-title">Tipo de Produto</h4>
+                    <div class="filter-options">
+                        <label class="filter-label">
+                            <input type="checkbox" name="product-type" value="generico" class="filter-checkbox">
+                            <span>Genérico</span>
+                        </label>
+                        <label class="filter-label">
+                            <input type="checkbox" name="product-type" value="referencia" class="filter-checkbox">
+                            <span>Referência</span>
+                        </label>
+                        <label class="filter-label">
+                            <input type="checkbox" name="product-type" value="outros" class="filter-checkbox">
+                            <span>Outros</span>
+                        </label>
+                    </div>
+                </div>
+
+                <!-- Brand Filter -->
+                <div class="filter-group">
+                    <h4 class="filter-title">Marca</h4>
+                    <div class="filter-options" id="brand-filters-container">
+                        <!-- Loaded dynamically -->
+                    </div>
+                </div>
+
+                <!-- Price Filter -->
+                <div class="filter-group">
+                    <h4 class="filter-title">Preço Máximo</h4>
+                    <div class="price-slider-container">
+                        <input type="range" id="price-range" min="0" max="150" value="150" step="5">
+                        <div class="price-values">
+                            <span>R$ 0</span>
+                            <span id="price-max-display">R$ 150</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Dosage Filter -->
+                <div class="filter-group">
+                    <h4 class="filter-title">Dosagem / Apresentação</h4>
+                    <div class="filter-options" id="dosage-filters-container">
+                        <!-- Loaded dynamically -->
+                    </div>
+                </div>
+            </aside>
+
+            <!-- Main Product and Banner Area -->
+            <section class="content-area">
+                <!-- Carousel Banner -->
+                <div class="carousel-container">
+                    <div class="carousel-slides">
+                        <div class="carousel-slide active" style="background: linear-gradient(135deg, #00A86B 0%, #0056B3 100%);">
+                            <div class="slide-content">
+                                <span class="slide-tag">Frete Grátis</span>
+                                <h2>Entrega Rápida em Minutos</h2>
+                                <p>Compre medicamentos e itens essenciais e receba na sua casa com frete grátis em compras acima de R$ 79.</p>
+                                <a href="#vitrine" class="slide-btn">Aproveitar Agora</a>
+                            </div>
+                            <div class="slide-visual">
+                                <i data-lucide="truck" class="visual-icon"></i>
+                            </div>
+                        </div>
+                        <div class="carousel-slide" style="background: linear-gradient(135deg, #FF9500 0%, #FF3B30 100%);">
+                            <div class="slide-content">
+                                <span class="slide-tag">Suplementos & Vitaminas</span>
+                                <h2>Mais Energia para o Seu Dia</h2>
+                                <p>Até 30% de desconto na linha completa de vitaminas de A a Z e suplementos premium para imunidade.</p>
+                                <a href="#vitrine" class="slide-btn">Ver Ofertas</a>
+                            </div>
+                            <div class="slide-visual">
+                                <i data-lucide="activity" class="visual-icon"></i>
+                            </div>
+                        </div>
+                    </div>
+                    <button class="carousel-nav prev" id="carousel-prev"><i data-lucide="chevron-left"></i></button>
+                    <button class="carousel-nav next" id="carousel-next"><i data-lucide="chevron-right"></i></button>
+                    <div class="carousel-indicators">
+                        <span class="indicator active" data-slide="0"></span>
+                        <span class="indicator" data-slide="1"></span>
+                    </div>
+                </div>
+
+                <!-- Quick Shortcuts Grid -->
+                <div class="shortcuts-grid">
+                    <a href="#" class="shortcut-card">
+                        <div class="shortcut-icon-wrapper red">
+                            <i data-lucide="file-text"></i>
+                        </div>
+                        <span>Receita Digital</span>
+                    </a>
+                    <a href="#" class="shortcut-card">
+                        <div class="shortcut-icon-wrapper blue">
+                            <i data-lucide="store"></i>
+                        </div>
+                        <span>Compre e Retire</span>
+                    </a>
+                    <a href="#" class="shortcut-card">
+                        <div class="shortcut-icon-wrapper orange">
+                            <i data-lucide="percent"></i>
+                        </div>
+                        <span>Ofertas do Dia</span>
+                    </a>
+                    <a href="#" class="shortcut-card">
+                        <div class="shortcut-icon-wrapper green">
+                            <i data-lucide="award"></i>
+                        </div>
+                        <span>Marcas Próprias</span>
+                    </a>
+                </div>
+
+                <!-- Offers Section -->
+                <section class="products-section" id="vitrine">
+                    <div class="section-header">
+                        <h2><span class="section-badge red">Ofertas</span> Ofertas Imperdíveis</h2>
+                        <span class="results-count" id="results-count-text">Mostrando todos os produtos</span>
+                    </div>
+                    <div class="products-grid" id="offers-grid">
+                        <!-- Cards loaded dynamically -->
+                    </div>
+                </section>
+
+                <!-- Promo Section Removed (Replaced by Dynamic Badges) -->
+            </section>
+        </main>
+
+        <!-- ANVISA COMPLIANT FOOTER -->
+        <footer class="main-footer">
+            <div class="footer-container">
+                <div class="footer-grid">
+                    <div class="footer-col">
+                        <a href="#" class="logo">
+                            <div class="logo-icon">
+                                <i data-lucide="plus"></i>
+                            </div>
+                            <span class="logo-text">Bio<span>Saúde</span></span>
+                        </a>
+                        <p class="footer-about">
+                            Cuidando da sua saúde com carinho e qualidade. Sua farmácia premium com o portfólio mais completo da web.
+                        </p>
+                    </div>
+                    <div class="footer-col">
+                        <h4>Institucional</h4>
+                        <ul>
+                            <li><a href="#">Sobre Nós</a></li>
+                            <li><a href="#">Nossas Lojas</a></li>
+                            <li><a href="#">Trabalhe Conosco</a></li>
+                            <li><a href="#">Blog de Saúde</a></li>
+                        </ul>
+                    </div>
+                    <div class="footer-col">
+                        <h4>Ajuda e Suporte</h4>
+                        <ul>
+                            <li><a href="#">Atendimento ao Cliente</a></li>
+                            <li><a href="#">Políticas de Entrega</a></li>
+                            <li><a href="#">Trocas e Devoluções</a></li>
+                            <li><a href="#">Termos de Uso</a></li>
+                        </ul>
+                    </div>
+                    <div class="footer-col">
+                        <h4>Pagamento & Segurança</h4>
+                        <div class="payment-badges">
+                            <span class="pay-badge"><i data-lucide="credit-card"></i> Pix / Cartão</span>
+                        </div>
+                        <div class="security-seals">
+                            <span class="seal"><i data-lucide="shield-check"></i> Site Seguro</span>
+                            <span class="seal"><i data-lucide="lock"></i> SSL 256 bits</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="footer-anvisa">
+                    <p><strong>Informações Obrigatórias da ANVISA:</strong></p>
+                    <p>Razão Social: BioSaúde Distribuidora de Medicamentos Ltda. | CNPJ: 12.345.678/0001-90 | IE: 111.222.333.444</p>
+                    <p>Endereço: Av. da Saúde, 1000 - Jardim Clímaco, São Paulo - SP, CEP: 04230-000</p>
+                    <p>Farmacêutico Responsável: Dra. Beatriz Martins de Souza - CRF/SP nº 45.892 | AFE: 7.12345.6 | AE: 1.09876.5</p>
+                    <p class="warning-text">As informações contidas neste site não devem ser usadas para automedicação e não substituem, em hipótese alguma, as orientações dadas pelo profissional da área médica. Somente o médico está apto a diagnosticar qualquer problema de saúde e prescrever o tratamento adequado. Ao persistirem os sintomas, o médico deverá ser consultado. Preços e condições exclusivos para o site biosaude.com.br.</p>
+                </div>
+                
+                <div class="footer-bottom">
+                    <p>&copy; 2026 BioSaúde. Todos os direitos reservados.</p>
+                </div>
+            </div>
+        </footer>
+    </div>
+
+    <!-- ADMIN PANEL CONTAINER (HIDDEN BY DEFAULT) -->
+    <div id="admin-view" style="display: none;">
+        <div class="admin-wrapper">
+            <!-- Admin Sidebar -->
+            <aside class="admin-sidebar">
+                <div class="admin-logo">
+                    <div class="logo-icon">
+                        <i data-lucide="settings"></i>
+                    </div>
+                    <span>Painel<span>Admin</span></span>
+                </div>
+                <nav class="admin-nav">
+                    <button class="admin-nav-btn active" data-target="admin-dashboard">
+                        <i data-lucide="bar-chart-3"></i> Dashboard & Gráficos
+                    </button>
+                    <button class="admin-nav-btn" data-target="admin-products">
+                        <i data-lucide="package-search"></i> Gerenciar Produtos
+                    </button>
+                    <button class="admin-nav-btn" data-target="admin-promos">
+                        <i data-lucide="tag"></i> Promoções
+                    </button>
+                    <button class="admin-nav-btn" data-target="admin-customers">
+                        <i data-lucide="users"></i> Clientes & Cashback
+                    </button>
+                    <button class="admin-nav-btn" data-target="admin-security">
+                        <i data-lucide="key-round"></i> Alterar Senha
+                    </button>
+                    <button class="admin-nav-btn logout" id="admin-logout-btn">
+                        <i data-lucide="log-out"></i> Sair do Painel
+                    </button>
+                </nav>
+            </aside>
+
+            <!-- Admin Content Screen -->
+            <main class="admin-content">
+                <!-- Topbar -->
+                <header class="admin-topbar">
+                    <h2>Bem-vindo, Administrador!</h2>
+                    <span class="admin-badge-indicator">Modo Admin Ativo</span>
+                </header>
+
+                <!-- SECTION: DASHBOARD -->
+                <section class="admin-section active" id="admin-dashboard">
+                    <!-- Metric Cards -->
+                    <div class="metrics-grid">
+                        <div class="metric-card">
+                            <div class="metric-info">
+                                <span>Faturamento Semanal</span>
+                                <h3>R$ 14.398,50</h3>
+                            </div>
+                            <div class="metric-icon green"><i data-lucide="trending-up"></i></div>
+                        </div>
+                        <div class="metric-card">
+                            <div class="metric-info">
+                                <span>Total de Pedidos</span>
+                                <h3>342</h3>
+                            </div>
+                            <div class="metric-icon blue"><i data-lucide="shopping-bag"></i></div>
+                        </div>
+                        <div class="metric-card">
+                            <div class="metric-info">
+                                <span>Ticket Médio</span>
+                                <h3>R$ 42,10</h3>
+                            </div>
+                            <div class="metric-icon orange"><i data-lucide="dollar-sign"></i></div>
+                        </div>
+                    </div>
+
+                    <!-- SVG Charts Card -->
+                    <div class="chart-container-card">
+                        <div class="chart-header">
+                            <h4>Desempenho de Vendas (Últimos 7 dias)</h4>
+                            <span class="chart-legend"><span class="legend-color"></span> Faturamento</span>
+                        </div>
+                        <!-- SVG chart representing sales data -->
+                        <div class="svg-chart-wrapper" id="sales-chart-wrapper">
+                            <!-- Rendered dynamically with SVG -->
+                        </div>
+                    </div>
+                </section>
+
+                <!-- SECTION: MANAGE PRODUCTS -->
+                <section class="admin-section" id="admin-products">
+                    <div class="product-management-layout">
+                        <!-- Add/Edit form -->
+                        <div class="product-form-card">
+                            <h3 id="form-title-text">Adicionar Novo Produto</h3>
+                            <form id="product-crud-form" class="crud-form">
+                                <input type="hidden" id="edit-product-id" value="">
+                                
+                                <div class="form-row">
+                                    <div class="form-group">
+                                        <label for="prod-name">Nome do Produto</label>
+                                        <input type="text" id="prod-name" placeholder="Ex: Dipirona Monoidratada" required>
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="prod-qty">Quantidade / Apresentação</label>
+                                        <input type="text" id="prod-qty" placeholder="Ex: 10 Comprimidos, 50g" required>
+                                    </div>
+                                </div>
+
+                                <div class="form-row">
+                                    <div class="form-group">
+                                        <label for="prod-brand">Marca</label>
+                                        <input type="text" id="prod-brand" placeholder="Ex: Medley, EMS" required>
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="prod-dosage">Dosagem / Peso</label>
+                                        <input type="text" id="prod-dosage" placeholder="Ex: 500mg, 50g" required>
+                                    </div>
+                                </div>
+
+                                <div class="form-row">
+                                    <div class="form-group">
+                                        <label for="prod-category">Categoria</label>
+                                        <select id="prod-category" required>
+                                            <option value="medicamentos">Medicamentos</option>
+                                            <option value="cuidados">Cuidados Diários</option>
+                                            <option value="beleza">Beleza</option>
+                                            <option value="bebe">Mamãe e Bebê</option>
+                                            <option value="vitaminas">Vitaminas</option>
+                                            <option value="suplementos">Suplementos</option>
+                                        </select>
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="prod-type">Tipo de Produto</label>
+                                        <select id="prod-type" required>
+                                            <option value="generico">Genérico</option>
+                                            <option value="referencia">Referência</option>
+                                            <option value="outros">Outros</option>
+                                        </select>
+                                    </div>
+                                </div>
+
+                                <div class="form-row">
+                                    <div class="form-group">
+                                        <label for="prod-price">Preço Original (R$)</label>
+                                        <input type="number" id="prod-price" min="0" step="0.01" placeholder="Ex: 19.90" required>
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="prod-discount">Desconto (%)</label>
+                                        <input type="number" id="prod-discount" min="0" max="100" value="0" placeholder="Ex: 20">
+                                    </div>
+                                </div>
+
+                                <div class="form-group">
+                                    <label for="prod-image">URL da Imagem</label>
+                                    <input type="url" id="prod-image" placeholder="https://exemplo.com/imagem.jpg">
+                                    <p class="field-hint">Deixe em branco para usar imagem padrão.</p>
+                                </div>
+
+                                <div class="form-group checkbox-group">
+                                    <label class="toggle-switch">
+                                        <input type="checkbox" id="prod-promo-type">
+                                        <span class="slider"></span>
+                                    </label>
+                                    <span>Habilitar Promoção "Leve 3 Pague 2"</span>
+                                </div>
+
+                                <div class="form-actions">
+                                    <button type="button" class="btn btn-secondary" id="cancel-edit-btn" style="display: none;">Cancelar</button>
+                                    <button type="submit" class="btn btn-primary" id="save-product-btn">Salvar Produto</button>
+                                </div>
+                            </form>
+                        </div>
+
+                        <!-- Product List -->
+                        <div class="product-list-card">
+                            <h3>Produtos Cadastrados</h3>
+                            <div class="table-wrapper">
+                                <table class="admin-table">
+                                    <thead>
+                                        <tr>
+                                            <th>Nome</th>
+                                            <th>Marca</th>
+                                            <th>Preço</th>
+                                            <th>Promoção</th>
+                                            <th>Ações</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="admin-products-table-body">
+                                        <!-- Dynamic listing -->
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- SECTION: PROMOTIONS -->
+                <section class="admin-section" id="admin-promos">
+                    <div class="product-management-layout">
+                        <!-- Add Promo Form -->
+                        <div class="product-form-card">
+                            <h3>Criar Nova Promoção</h3>
+                            <form id="promo-crud-form" class="crud-form">
+                                <div class="form-group">
+                                    <label for="promo-product">Produto</label>
+                                    <select id="promo-product" required>
+                                        <!-- Dynamic options -->
+                                    </select>
+                                </div>
+                                <div class="form-row">
+                                    <div class="form-group">
+                                        <label for="promo-type">Tipo de Promoção</label>
+                                        <select id="promo-type" required>
+                                            <option value="discount">Desconto (%)</option>
+                                            <option value="bogo">Leve X Pague Y</option>
+                                            <option value="cashback">Cashback Fixo (R$)</option>
+                                        </select>
+                                    </div>
+                                    <div class="form-group" id="promo-value-group">
+                                        <label for="promo-value" id="promo-value-label">Valor do Desconto (%)</label>
+                                        <input type="number" id="promo-value" min="1" required>
+                                    </div>
+                                </div>
+                                <div class="form-row" id="promo-bogo-group" style="display: none;">
+                                    <div class="form-group">
+                                        <label for="promo-take">Quantidade (Leve)</label>
+                                        <input type="number" id="promo-take" min="2" value="3">
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="promo-pay">Pague (Pague)</label>
+                                        <input type="number" id="promo-pay" min="1" value="2">
+                                    </div>
+                                </div>
+                                <button type="submit" class="btn btn-primary" style="margin-top: 10px;">Ativar Promoção</button>
+                            </form>
+                        </div>
+                        
+                        <!-- Active Promos List -->
+                        <div class="product-list-card">
+                            <h3>Promoções Ativas</h3>
+                            <div class="table-wrapper">
+                                <table class="admin-table">
+                                    <thead>
+                                        <tr>
+                                            <th>Produto</th>
+                                            <th>Tipo</th>
+                                            <th>Regra</th>
+                                            <th>Ações</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="admin-promos-table-body">
+                                        <!-- Dynamic listing -->
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- SECTION: CUSTOMERS & CASHBACK -->
+                <section class="admin-section" id="admin-customers">
+                    <div class="metrics-grid" style="margin-bottom: 24px;">
+                        <div class="metric-card">
+                            <div class="metric-info">
+                                <span>Total de Clientes</span>
+                                <h3 id="total-customers-metric">0</h3>
+                            </div>
+                            <div class="metric-icon blue"><i data-lucide="users"></i></div>
+                        </div>
+                        <div class="metric-card">
+                            <div class="metric-info">
+                                <span>Cashback Concedido</span>
+                                <h3 id="total-cashback-metric">R$ 0,00</h3>
+                            </div>
+                            <div class="metric-icon orange"><i data-lucide="coins"></i></div>
+                        </div>
+                    </div>
+
+                    <div class="product-list-card">
+                        <h3>Top Clientes & Saldo de Cashback</h3>
+                        <div class="table-wrapper">
+                            <table class="admin-table">
+                                <thead>
+                                    <tr>
+                                        <th>Nome</th>
+                                        <th>E-mail</th>
+                                        <th>Total Gasto</th>
+                                        <th>Pedidos</th>
+                                        <th>Saldo Cashback</th>
+                                        <th>Ação</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="admin-customers-table-body">
+                                    <!-- Dynamic listing -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- SECTION: SECURITY / SETTINGS -->
+                <section class="admin-section" id="admin-security">
+                    <div class="security-card">
+                        <h3>Alterar Senha do Administrador</h3>
+                        <p class="security-desc">Altere sua senha de acesso ao Painel Admin para maior segurança.</p>
+                        
+                        <form id="change-password-form" class="crud-form max-width-form">
+                            <div class="form-group">
+                                <label for="current-pass">Senha Atual</label>
+                                <input type="password" id="current-pass" placeholder="Digite a senha atual" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="new-pass">Nova Senha</label>
+                                <input type="password" id="new-pass" placeholder="Mínimo 6 caracteres" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="confirm-new-pass">Confirmar Nova Senha</label>
+                                <input type="password" id="confirm-new-pass" placeholder="Repita a nova senha" required>
+                            </div>
+                            <button type="submit" class="btn btn-primary">Salvar Nova Senha</button>
+                        </form>
+                    </div>
+                </section>
+            </main>
+        </div>
+    </div>
+
+    <!-- CART SIDE DRAWER -->
+    <div class="cart-drawer" id="cart-drawer">
+        <div class="cart-drawer-backdrop" id="cart-backdrop"></div>
+        <div class="cart-drawer-content">
+            <div class="cart-drawer-header">
+                <h3>Seu Carrinho</h3>
+                <button class="close-drawer-btn" id="close-cart-btn">
+                    <i data-lucide="x"></i>
+                </button>
+            </div>
+            
+            <!-- Empty state -->
+            <div class="cart-empty-state" id="cart-empty">
+                <i data-lucide="shopping-bag" class="empty-icon"></i>
+                <p>Seu carrinho está vazio.</p>
+                <button class="continue-shopping-btn" id="continue-shopping">Começar a Comprar</button>
+            </div>
+
+            <!-- Cart Items List -->
+            <div class="cart-items-list" id="cart-items" style="display: none;">
+                <!-- Dynamically loaded -->
+            </div>
+
+            <!-- Cart Footer Summary -->
+            <div class="cart-drawer-footer" id="cart-summary" style="display: none;">
+                <div class="summary-row">
+                    <span>Subtotal</span>
+                    <span id="cart-subtotal">R$ 0,00</span>
+                </div>
+                <div class="summary-row promo-discount" id="cart-discount-row" style="display: none;">
+                    <span>Desconto (Leve 3 Pague 2)</span>
+                    <span id="cart-discount">-R$ 0,00</span>
+                </div>
+                <div class="summary-row total">
+                    <span>Total</span>
+                    <span id="cart-total">R$ 0,00</span>
+                </div>
+                <button class="checkout-btn" id="checkout-btn">
+                    <span>Finalizar Pedido</span>
+                    <i data-lucide="arrow-right"></i>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- CEP MODAL -->
+    <div class="modal-overlay" id="cep-modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3><i data-lucide="map-pin"></i> Onde quer receber seu pedido?</h3>
+                <button class="close-modal-btn" id="close-cep-modal"><i data-lucide="x"></i></button>
+            </div>
+            <div class="modal-body">
+                <p>Insira seu CEP para consultar prazos de entrega e a disponibilidade dos produtos na sua região.</p>
+                <div class="cep-input-group">
+                    <input type="text" id="cep-input-field" placeholder="00000-000" maxlength="9">
+                    <button class="apply-cep-btn" id="apply-cep-btn">Confirmar</button>
+                </div>
+                <div class="cep-results" id="cep-results" style="display: none;">
+                    <div class="cep-success">
+                        <i data-lucide="check-circle-2"></i>
+                        <div>
+                            <strong>CEP Atualizado!</strong>
+                            <p id="cep-info-text">Entregando em São Paulo - SP</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- LOGIN MODAL (NO ADMIN BUTTON, OPENS ONLY WITH ADMIN EMAIL/PASS) -->
+    <div class="modal-overlay" id="login-modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3><i data-lucide="user"></i> Acessar Minha Conta</h3>
+                <button class="close-modal-btn" id="close-login-modal"><i data-lucide="x"></i></button>
+            </div>
+            <div class="modal-body">
+                <p>Insira seus dados para acessar o perfil e acompanhar seus pedidos.</p>
+                <form id="login-form" class="crud-form">
+                    <div class="form-group">
+                        <label for="login-email">E-mail ou Usuário</label>
+                        <input type="text" id="login-email" placeholder="Digite seu e-mail" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="login-password">Senha</label>
+                        <input type="password" id="login-password" placeholder="Digite sua senha" required>
+                    </div>
+                    <button type="submit" class="btn btn-primary" style="width:100%; padding:14px; margin-top:10px;">Entrar</button>
+                </form>
+                <div class="login-feedback-message" id="login-feedback" style="display: none; padding: 12px; border-radius: var(--border-radius-sm); margin-top: 10px; font-size: 13px; font-weight: 600;"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Custom Script -->
+    <script src="app.js"></script>
+</body>
+</html>
