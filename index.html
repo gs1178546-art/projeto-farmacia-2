@@ -176,7 +176,7 @@
 
                 <!-- Quick Shortcuts Grid -->
                 <div class="shortcuts-grid">
-                    <a href="#" class="shortcut-card">
+                    <a href="#" class="shortcut-card" id="receita-btn">
                         <div class="shortcut-icon-wrapper red">
                             <i data-lucide="file-text"></i>
                         </div>
@@ -294,6 +294,9 @@
                     </button>
                     <button class="admin-nav-btn" data-target="admin-products">
                         <i data-lucide="package-search"></i> Gerenciar Produtos
+                    </button>
+                    <button class="admin-nav-btn" data-target="admin-carousel">
+                        <i data-lucide="monitor-play"></i> Carrossel
                     </button>
                     <button class="admin-nav-btn" data-target="admin-promos">
                         <i data-lucide="tag"></i> Promoções
@@ -423,17 +426,17 @@
                                 </div>
 
                                 <div class="form-group">
-                                    <label for="prod-image">URL da Imagem</label>
-                                    <input type="url" id="prod-image" placeholder="https://exemplo.com/imagem.jpg">
-                                    <p class="field-hint">Deixe em branco para usar imagem padrão.</p>
-                                </div>
-
-                                <div class="form-group checkbox-group">
-                                    <label class="toggle-switch">
-                                        <input type="checkbox" id="prod-promo-type">
-                                        <span class="slider"></span>
-                                    </label>
-                                    <span>Habilitar Promoção "Leve 3 Pague 2"</span>
+                                    <label for="prod-image">Imagem do Produto (Arquivo Local)</label>
+                                    <div class="file-upload-wrapper">
+                                        <label for="prod-image" class="file-upload-btn">
+                                            <i data-lucide="upload-cloud"></i> Escolher Imagem
+                                        </label>
+                                        <span id="prod-image-name" class="file-upload-name">Nenhum arquivo selecionado</span>
+                                        <input type="file" id="prod-image" accept="image/*" class="file-input-hidden">
+                                    </div>
+                                    <p class="field-hint">Selecione uma imagem do seu computador (Jpg, Png). Deixe em branco para manter a atual.</p>
+                                    <!-- Hidden preview to keep base64 logic simple -->
+                                    <input type="hidden" id="prod-image-base64">
                                 </div>
 
                                 <div class="form-actions">
@@ -570,6 +573,80 @@
                     </div>
                 </section>
 
+                <!-- SECTION: CAROUSEL -->
+                <section class="admin-section" id="admin-carousel">
+                    <div class="product-management-layout">
+                        <!-- Add/Edit Carousel Slide Form -->
+                        <div class="product-form-card">
+                            <h3 id="carousel-form-title">Adicionar Slide ao Carrossel</h3>
+                            <form id="carousel-crud-form" class="crud-form">
+                                <div class="form-group">
+                                    <label for="slide-tag">Tag (Selo de Destaque)</label>
+                                    <input type="text" id="slide-tag" placeholder="Ex: Frete Grátis" required>
+                                </div>
+                                <div class="form-group">
+                                    <label for="slide-title">Título Principal</label>
+                                    <input type="text" id="slide-title" placeholder="Ex: Entrega Rápida em Minutos" required>
+                                </div>
+                                <div class="form-group">
+                                    <label for="slide-desc">Descrição Subtítulo</label>
+                                    <textarea id="slide-desc" rows="3" placeholder="Mensagem curta sob o título..." required></textarea>
+                                </div>
+                                <div class="form-row">
+                                    <div class="form-group">
+                                        <label for="slide-gradient">Cor de Fundo (Gradiente)</label>
+                                        <select id="slide-gradient" required>
+                                            <option value="linear-gradient(135deg, #00A86B 0%, #0056B3 100%)">Verde Saúde para Azul</option>
+                                            <option value="linear-gradient(135deg, #FF9500 0%, #FF3B30 100%)">Laranja Quente</option>
+                                            <option value="linear-gradient(135deg, #8B5CF6 0%, #3B82F6 100%)">Roxo Premium</option>
+                                            <option value="linear-gradient(135deg, #10B981 0%, #047857 100%)">Esmeralda Escuro</option>
+                                        </select>
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="slide-icon">Ícone Lucide</label>
+                                        <input type="text" id="slide-icon" placeholder="Ex: truck, activity, star" required>
+                                    </div>
+                                </div>
+                                <div class="form-group" style="margin-top: 15px;">
+                                     <label for="slide-image">Imagem de Fundo/Destaque (Opcional - Substitui o Ícone)</label>
+                                     <div class="file-upload-wrapper">
+                                         <label for="slide-image" class="file-upload-btn">
+                                             <i data-lucide="upload-cloud"></i> Escolher Imagem
+                                         </label>
+                                         <span id="slide-image-name" class="file-upload-name">Nenhum arquivo selecionado</span>
+                                         <input type="file" id="slide-image" accept="image/*" class="file-input-hidden">
+                                     </div>
+                                     <input type="hidden" id="slide-image-base64">
+                                 </div>
+                                <div class="form-actions" style="margin-top: 15px;">
+                                    <button type="button" class="btn btn-secondary" id="cancel-slide-edit-btn" style="display: none;">Cancelar</button>
+                                    <button type="submit" class="btn btn-primary" id="save-slide-btn">Adicionar Slide</button>
+                                </div>
+                            </form>
+                        </div>
+                        
+                        <!-- Carousel Slides List -->
+                        <div class="product-list-card">
+                            <h3>Slides Cadastrados</h3>
+                            <div class="table-wrapper">
+                                <table class="admin-table">
+                                    <thead>
+                                        <tr>
+                                            <th>Título</th>
+                                            <th>Tag</th>
+                                            <th>Ordem</th>
+                                            <th>Ações</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="admin-carousel-table-body">
+                                        <!-- Dynamic listing -->
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
                 <!-- SECTION: SECURITY / SETTINGS -->
                 <section class="admin-section" id="admin-security">
                     <div class="security-card">
@@ -668,27 +745,213 @@
         </div>
     </div>
 
-    <!-- LOGIN MODAL (NO ADMIN BUTTON, OPENS ONLY WITH ADMIN EMAIL/PASS) -->
+    <!-- LOGIN & REGISTER MODAL -->
     <div class="modal-overlay" id="login-modal">
-        <div class="modal-content">
+        <div class="modal-content login-content">
             <div class="modal-header">
-                <h3><i data-lucide="user"></i> Acessar Minha Conta</h3>
+                <h3><i data-lucide="user"></i> Área do Cliente</h3>
                 <button class="close-modal-btn" id="close-login-modal"><i data-lucide="x"></i></button>
             </div>
             <div class="modal-body">
-                <p>Insira seus dados para acessar o perfil e acompanhar seus pedidos.</p>
-                <form id="login-form" class="crud-form">
+                <div class="auth-tabs">
+                    <button class="auth-tab active" data-tab="login">Entrar</button>
+                    <button class="auth-tab" data-tab="register">Cadastrar</button>
+                </div>
+                
+                <!-- Login Form -->
+                <form id="login-form" class="auth-form active">
                     <div class="form-group">
-                        <label for="login-email">E-mail ou Usuário</label>
-                        <input type="text" id="login-email" placeholder="Digite seu e-mail" required>
+                        <label for="login-email">E-mail</label>
+                        <input type="email" id="login-email" placeholder="seu@email.com" required>
                     </div>
                     <div class="form-group">
                         <label for="login-password">Senha</label>
-                        <input type="password" id="login-password" placeholder="Digite sua senha" required>
+                        <input type="password" id="login-password" placeholder="Sua senha" required>
                     </div>
                     <button type="submit" class="btn btn-primary" style="width:100%; padding:14px; margin-top:10px;">Entrar</button>
                 </form>
+
+                <!-- Register Form -->
+                <form id="register-form" class="auth-form" style="display:none;">
+                    <div class="form-group">
+                        <label for="reg-name">Nome Completo</label>
+                        <input type="text" id="reg-name" placeholder="Seu nome" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="reg-email">E-mail</label>
+                        <input type="email" id="reg-email" placeholder="seu@email.com" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="reg-password">Criar Senha</label>
+                        <input type="password" id="reg-password" placeholder="Mínimo 6 caracteres" minlength="6" required>
+                    </div>
+                    <button type="submit" class="btn btn-primary" style="width:100%; padding:14px; margin-top:10px;">Criar Conta</button>
+                </form>
+                
                 <div class="login-feedback-message" id="login-feedback" style="display: none; padding: 12px; border-radius: var(--border-radius-sm); margin-top: 10px; font-size: 13px; font-weight: 600;"></div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- ORDERS HISTORY MODAL -->
+    <div class="modal-overlay" id="orders-modal">
+        <div class="modal-content" style="max-width: 600px;">
+            <div class="modal-header">
+                <h3><i data-lucide="package"></i> Histórico de Pedidos</h3>
+                <button class="close-modal-btn" id="close-orders-modal"><i data-lucide="x"></i></button>
+            </div>
+            <div class="modal-body" style="background: var(--bg-body); max-height: 60vh; overflow-y: auto; padding: 20px;">
+                <div id="orders-list-container">
+                    <!-- Loaded dynamically via JS -->
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- PRESCRIPTION UPLOAD MODAL -->
+    <div class="modal-overlay" id="prescription-modal">
+        <div class="modal-content" style="max-width: 500px;">
+            <div class="modal-header">
+                <h3><i data-lucide="file-text"></i> Enviar Receita Digital</h3>
+                <button class="close-modal-btn" id="close-prescription-modal"><i data-lucide="x"></i></button>
+            </div>
+            <div class="modal-body">
+                <p style="color: var(--text-light); font-size: 14px; margin-bottom: 20px;">
+                    Faça o upload da sua receita médica para que nossos farmacêuticos possam avaliar e liberar seus medicamentos.
+                </p>
+                <form id="prescription-form">
+                    <div class="file-upload-wrapper" style="margin-bottom: 20px;">
+                        <label for="prescription-file" class="file-upload-btn btn btn-outline" style="width: 100%; justify-content: center; padding: 15px; border-style: dashed;">
+                            <i data-lucide="upload-cloud"></i> 
+                            <span id="prescription-file-name">Selecionar Imagem/PDF</span>
+                        </label>
+                        <input type="file" id="prescription-file" accept="image/*,.pdf" style="display: none;" required>
+                    </div>
+                    <div id="prescription-progress" style="display:none; text-align: center; margin-bottom: 20px;">
+                        <div style="width: 100%; height: 8px; background: #e2e8f0; border-radius: 4px; overflow: hidden;">
+                            <div id="prescription-progress-bar" style="height: 100%; width: 0%; background: var(--primary); transition: width 0.3s;"></div>
+                        </div>
+                        <span style="font-size: 12px; color: var(--text-light); margin-top: 5px; display: block;">Enviando...</span>
+                    </div>
+                    <button type="submit" class="btn btn-primary" style="width: 100%; padding: 14px;" id="submit-prescription-btn">Enviar Receita</button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- CHECKOUT MODAL WIZARD -->
+    <div class="modal-overlay" id="checkout-modal">
+        <div class="modal-content checkout-content">
+            <div class="modal-header">
+                <h3><i data-lucide="shopping-bag"></i> Finalizar Compra</h3>
+                <button class="close-modal-btn" id="close-checkout-modal"><i data-lucide="x"></i></button>
+            </div>
+            <div class="modal-body checkout-body">
+                
+                <!-- Step 1: Address -->
+                <div class="checkout-step active" id="checkout-step-1">
+                    <h4 class="step-title">Confirme seu Endereço</h4>
+                    <p class="step-desc">Para onde devemos enviar seus produtos?</p>
+                    <form id="checkout-address-form" class="crud-form">
+                        <div class="form-group">
+                            <label>CEP</label>
+                            <input type="text" id="chk-cep" placeholder="00000-000" required>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group" style="flex:2">
+                                <label>Rua / Avenida</label>
+                                <input type="text" id="chk-street" placeholder="Sua rua" required>
+                            </div>
+                            <div class="form-group" style="flex:1">
+                                <label>Número</label>
+                                <input type="text" id="chk-number" required>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label>Complemento (opcional)</label>
+                            <input type="text" id="chk-comp" placeholder="Apto, Bloco...">
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label>Bairro</label>
+                                <input type="text" id="chk-neighborhood" required>
+                            </div>
+                            <div class="form-group">
+                                <label>Cidade / Estado</label>
+                                <input type="text" id="chk-city" placeholder="Cidade - UF" required>
+                            </div>
+                        </div>
+                        <button type="button" class="btn btn-primary" id="btn-next-payment" style="width:100%; padding:14px; margin-top:20px;">Continuar para Pagamento</button>
+                    </form>
+                </div>
+
+                <!-- Step 2: Payment -->
+                <div class="checkout-step" id="checkout-step-2">
+                    <h4 class="step-title">Como deseja pagar?</h4>
+                    <div class="payment-methods">
+                        <label class="payment-method-card">
+                            <input type="radio" name="payment_method" value="pix" checked>
+                            <div class="method-info">
+                                <i data-lucide="qr-code"></i> PIX (Aprovação Imediata)
+                            </div>
+                        </label>
+                        <label class="payment-method-card">
+                            <input type="radio" name="payment_method" value="credit">
+                            <div class="method-info">
+                                <i data-lucide="credit-card"></i> Cartão de Crédito
+                            </div>
+                        </label>
+                        <label class="payment-method-card">
+                            <input type="radio" name="payment_method" value="debit">
+                            <div class="method-info">
+                                <i data-lucide="credit-card"></i> Cartão de Débito
+                            </div>
+                        </label>
+                    </div>
+
+                    <!-- Card Form Details (Hidden by default, shown if Credit/Debit selected) -->
+                    <div class="card-details-form" id="card-details-form" style="display: none;">
+                        <div class="form-group">
+                            <label>Número do Cartão</label>
+                            <input type="text" id="card-number" placeholder="0000 0000 0000 0000">
+                        </div>
+                        <div class="form-group">
+                            <label>Nome impresso no Cartão</label>
+                            <input type="text" id="card-name" placeholder="NOME DO TITULAR">
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label>Validade</label>
+                                <input type="text" id="card-expiry" placeholder="MM/AA">
+                            </div>
+                            <div class="form-group">
+                                <label>CVV</label>
+                                <input type="text" id="card-cvv" placeholder="123" maxlength="4">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="checkout-actions">
+                        <button type="button" class="btn btn-secondary" id="btn-back-address">Voltar</button>
+                        <button type="button" class="btn btn-primary" id="btn-finish-order">Concluir Pagamento</button>
+                    </div>
+                </div>
+
+                <!-- Step 3: Success -->
+                <div class="checkout-step success-step" id="checkout-step-3">
+                    <div class="success-icon-wrapper">
+                        <i data-lucide="check-circle" class="success-icon"></i>
+                    </div>
+                    <h2>Pedido Confirmado!</h2>
+                    <p>Obrigado por comprar na BioSaúde. Seu pedido está sendo processado.</p>
+                    <div class="pix-info" id="pix-info-box" style="display: none;">
+                        <p class="pix-title">Escaneie ou copie a chave Pix:</p>
+                        <div class="pix-code">00020126580014br.gov.bcb.pix0136fake-key-biosaude-1234</div>
+                        <button class="btn btn-secondary btn-sm" onclick="alert('Chave PIX copiada!')">Copiar Chave</button>
+                    </div>
+                    <button type="button" class="btn btn-primary" id="btn-close-success" style="width:100%; padding:14px; margin-top:20px;">Voltar à Loja</button>
+                </div>
+
             </div>
         </div>
     </div>

@@ -1321,7 +1321,8 @@ input, select {
     color: var(--text-main);
 }
 
-.form-group input, .form-group select {
+.form-group input, .form-group select, .form-group textarea {
+    width: 100%;
     padding: 10px;
     border-radius: var(--border-radius-sm);
     background-color: var(--bg-main);
@@ -1653,8 +1654,14 @@ input, select {
     gap: 24px;
 }
 
+@keyframes slideFadeIn {
+    from { opacity: 0; transform: translateY(15px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
 .admin-section.active {
     display: flex;
+    animation: slideFadeIn 0.4s ease forwards;
 }
 
 /* Metrics Dashboard grid */
@@ -2173,4 +2180,368 @@ input, select {
 
 #account-btn:active {
     transform: scale(0.96);
+}
+
+/* ==========================================================================
+   CUSTOM FILE INPUT (ADMIN)
+   ========================================================================== */
+.file-upload-wrapper {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    margin-top: 5px;
+}
+
+.file-upload-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 16px;
+    background-color: var(--bg-main);
+    border: 1px solid var(--border-color);
+    border-radius: var(--border-radius-sm);
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text-main);
+    cursor: pointer;
+    transition: var(--transition-fast);
+}
+
+.file-upload-btn i {
+    width: 16px;
+    height: 16px;
+    color: var(--primary);
+}
+
+.file-upload-btn:hover {
+    background-color: var(--primary-light);
+    border-color: rgba(13, 148, 136, 0.3);
+    color: var(--primary);
+}
+
+.file-upload-name {
+    font-size: 13px;
+    color: var(--text-muted);
+    font-style: italic;
+    max-width: 200px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.file-input-hidden {
+    display: none;
+}
+
+/* ==========================================================================
+   CHECKOUT MODAL WIZARD
+   ========================================================================== */
+.checkout-content {
+    max-width: 600px;
+}
+
+.checkout-body {
+    position: relative;
+    overflow: hidden;
+    min-height: 400px;
+}
+
+.checkout-step {
+    display: none;
+    flex-direction: column;
+    animation: slideFadeIn 0.3s ease forwards;
+}
+
+.checkout-step.active {
+    display: flex;
+}
+
+.step-title {
+    font-size: 20px;
+    font-weight: 800;
+    color: #0f172a;
+    margin-bottom: 5px;
+}
+
+.step-desc {
+    font-size: 14px;
+    color: var(--text-muted);
+    margin-bottom: 25px;
+}
+
+/* Payment Methods */
+.payment-methods {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    margin-bottom: 25px;
+}
+
+.payment-method-card {
+    display: flex;
+    align-items: center;
+    padding: 16px;
+    border: 2px solid var(--border-color);
+    border-radius: var(--border-radius-md);
+    cursor: pointer;
+    transition: var(--transition-fast);
+}
+
+.payment-method-card:hover {
+    background-color: #f8fafc;
+}
+
+.payment-method-card input[type="radio"] {
+    margin-right: 15px;
+    accent-color: var(--primary);
+    width: 18px;
+    height: 18px;
+}
+
+.method-info {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    font-weight: 700;
+    font-size: 15px;
+    color: #1e293b;
+}
+
+.method-info i {
+    width: 20px;
+    height: 20px;
+    color: var(--primary);
+}
+
+.payment-method-card:has(input:checked) {
+    border-color: var(--primary);
+    background-color: var(--primary-light);
+}
+
+.card-details-form {
+    background-color: #f8fafc;
+    padding: 20px;
+    border-radius: var(--border-radius-md);
+    border: 1px solid var(--border-color);
+    margin-bottom: 25px;
+}
+
+.checkout-actions {
+    display: flex;
+    gap: 15px;
+    margin-top: auto;
+}
+
+.checkout-actions .btn {
+    flex: 1;
+    padding: 14px;
+}
+
+/* Success Step */
+.success-step {
+    text-align: center;
+    align-items: center;
+    justify-content: center;
+    padding: 40px 20px;
+}
+
+.success-icon-wrapper {
+    width: 80px;
+    height: 80px;
+    background-color: var(--primary-light);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 20px;
+}
+
+.success-icon {
+    width: 40px;
+    height: 40px;
+    color: var(--primary);
+}
+
+.success-step h2 {
+    font-size: 24px;
+    font-weight: 800;
+    color: #0f172a;
+    margin-bottom: 10px;
+}
+
+.success-step p {
+    color: var(--text-muted);
+    font-size: 15px;
+}
+
+.pix-info {
+    margin-top: 25px;
+    background-color: #f8fafc;
+    padding: 20px;
+    border-radius: var(--border-radius-md);
+    border: 1px dashed var(--primary);
+    width: 100%;
+}
+
+.pix-code {
+    background-color: white;
+    padding: 10px;
+    border: 1px solid var(--border-color);
+    border-radius: var(--border-radius-sm);
+    font-family: monospace;
+    font-size: 13px;
+    word-break: break-all;
+    margin: 10px 0;
+    color: #0f172a;
+}
+
+/* ==========================================================================
+   AUTH TABS & REGISTER FORMS
+   ========================================================================== */
+.auth-tabs {
+    display: flex;
+    margin-bottom: 20px;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.auth-tab {
+    flex: 1;
+    background: transparent;
+    border: none;
+    padding: 10px 0;
+    font-weight: 600;
+    color: var(--text-muted);
+    cursor: pointer;
+    border-bottom: 2px solid transparent;
+    transition: var(--transition-fast);
+}
+
+.auth-tab.active {
+    color: var(--primary);
+    border-bottom-color: var(--primary);
+}
+
+.auth-form {
+    display: none;
+    animation: slideFadeIn 0.3s ease-out forwards;
+}
+
+.auth-form.active {
+    display: block;
+}
+
+/* ==========================================================================
+   ORDERS HISTORY LIST
+   ========================================================================== */
+.order-card {
+    background: #fff;
+    border: 1px solid var(--border-color);
+    border-radius: var(--border-radius-sm);
+    padding: 15px;
+    margin-bottom: 15px;
+    box-shadow: var(--box-shadow-sm);
+}
+
+.order-card-header {
+    display: flex;
+    justify-content: space-between;
+    border-bottom: 1px solid var(--border-color);
+    padding-bottom: 10px;
+    margin-bottom: 10px;
+}
+
+.order-card-header h4 {
+    font-size: 14px;
+    color: var(--text-dark);
+}
+
+.order-card-header span {
+    font-size: 12px;
+    color: var(--text-muted);
+}
+
+.order-card-body {
+    font-size: 13px;
+    color: var(--text-light);
+}
+
+.order-card-footer {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 10px;
+    padding-top: 10px;
+    border-top: 1px dashed #e2e8f0;
+    font-weight: 600;
+    color: var(--text-dark);
+}
+
+/* ==========================================================================
+   MOBILE RESPONSIVENESS (MEDIA QUERIES)
+   ========================================================================== */
+@media screen and (max-width: 768px) {
+    /* Header & Navigation */
+    .header-container {
+        flex-wrap: wrap;
+        padding: 10px 15px;
+    }
+    .search-wrapper {
+        order: 3;
+        width: 100%;
+        margin-top: 10px;
+    }
+    .header-actions span {
+        display: none; /* Hide text on mobile icons */
+    }
+    .header-actions {
+        gap: 10px;
+    }
+    
+    /* Layout */
+    .main-layout {
+        flex-direction: column;
+        padding: 10px;
+        gap: 15px;
+    }
+    .sidebar-filters {
+        position: static;
+        width: 100%;
+        margin-bottom: 20px;
+    }
+    
+    /* Grid adjustments */
+    .shortcuts-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+    .products-grid {
+        grid-template-columns: repeat(1, 1fr);
+    }
+    .carousel-slides {
+        height: 250px;
+    }
+    .slide-content h2 {
+        font-size: 20px;
+    }
+    .slide-content p {
+        font-size: 12px;
+    }
+    .slide-visual {
+        display: none; /* Hide visual icon on mobile to save space */
+    }
+    
+    /* Admin adjustments */
+    .admin-layout {
+        flex-direction: column;
+    }
+    .admin-sidebar {
+        width: 100%;
+        height: auto;
+        position: static;
+    }
+    .admin-content {
+        margin-left: 0;
+        width: 100%;
+    }
+    .table-wrapper {
+        overflow-x: auto;
+    }
 }

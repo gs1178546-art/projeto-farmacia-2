@@ -13,7 +13,7 @@ const DEFAULT_PRODUCTS = [
         priceCurrent: 9.90,
         discount: 0,
         dosage: "500mg",
-        image: "https://images.unsplash.com/photo-1584308666744-24d5c474f2ae?w=300&auto=format&fit=crop&q=60"
+        image: "https://images.unsplash.com/photo-1607619056574-7b8d304b3b8f?w=300&auto=format&fit=crop&q=60"
     },
     {
         id: 2,
@@ -26,7 +26,7 @@ const DEFAULT_PRODUCTS = [
         priceCurrent: 18.50,
         discount: 0,
         dosage: "750mg",
-        image: "https://images.unsplash.com/photo-1584308666744-24d5c474f2ae?w=300&auto=format&fit=crop&q=60"
+        image: "https://images.unsplash.com/photo-1584017911766-d451b3d0e843?w=300&auto=format&fit=crop&q=60"
     },
     {
         id: 3,
@@ -39,7 +39,7 @@ const DEFAULT_PRODUCTS = [
         priceCurrent: 89.90,
         discount: 0,
         dosage: "50g",
-        image: "https://images.unsplash.com/photo-1598440947619-2c35fc9aa908?w=300&auto=format&fit=crop&q=60"
+        image: "https://images.unsplash.com/photo-1522335789203-aabd1fc54bc9?w=300&auto=format&fit=crop&q=60"
     },
     {
         id: 4,
@@ -52,7 +52,7 @@ const DEFAULT_PRODUCTS = [
         priceCurrent: 45.00,
         discount: 0,
         dosage: "1g",
-        image: "https://images.unsplash.com/photo-1616679911721-eff6eec18fcd?w=300&auto=format&fit=crop&q=60"
+        image: "https://images.unsplash.com/photo-1626806787461-102c1bfaaea1?w=300&auto=format&fit=crop&q=60"
     },
     {
         id: 5,
@@ -137,6 +137,25 @@ const DEFAULT_CUSTOMERS = [
     { id: "c5", name: "Beatriz Costa", email: "biacosta@example.com", totalSpent: 3100.80, ordersCount: 15, cashbackBalance: 120.00 }
 ];
 
+const DEFAULT_CAROUSEL = [
+    {
+        id: "slide_1",
+        tag: "Frete Grátis",
+        title: "Entrega Rápida em Minutos",
+        desc: "Compre medicamentos e itens essenciais e receba na sua casa com frete grátis em compras acima de R$ 79.",
+        bg: "linear-gradient(135deg, #00A86B 0%, #0056B3 100%)",
+        icon: "truck"
+    },
+    {
+        id: "slide_2",
+        tag: "Suplementos & Vitaminas",
+        title: "Mais Energia para o Seu Dia",
+        desc: "Até 30% de desconto na linha completa de vitaminas de A a Z e suplementos premium para imunidade.",
+        bg: "linear-gradient(135deg, #FF9500 0%, #FF3B30 100%)",
+        icon: "activity"
+    }
+];
+
 const SALES_HISTORY_DATA = [
     { day: "Seg", sales: 1200 },
     { day: "Ter", sales: 1850 },
@@ -154,6 +173,7 @@ const state = {
     products: DEFAULT_PRODUCTS,
     promotions: DEFAULT_PROMOTIONS,
     customers: DEFAULT_CUSTOMERS,
+    carousel: DEFAULT_CAROUSEL,
     cart: [],
     cep: '',
     activeCategory: 'todos',
@@ -187,6 +207,8 @@ function safeJSONParse(key, fallback) {
 state.products = safeJSONParse('farmacia_products', DEFAULT_PRODUCTS);
 state.promotions = safeJSONParse('farmacia_promotions', DEFAULT_PROMOTIONS);
 state.customers = safeJSONParse('farmacia_customers', DEFAULT_CUSTOMERS);
+state.carousel = safeJSONParse('farmacia_carousel', DEFAULT_CAROUSEL);
+state.orders = safeJSONParse('farmacia_orders', []);
 state.cart = safeJSONParse('farmacia_cart', []);
 state.cep = localStorage.getItem('farmacia_cep') || '';
 state.currentUser = safeJSONParse('farmacia_user', null);
@@ -215,6 +237,10 @@ function initApp() {
     runSafeInit(initAdminPanel, "Admin Panel Setup");
     runSafeInit(initAdminPromos, "Admin Promos Setup");
     runSafeInit(initAdminCustomers, "Admin Customers Setup");
+    runSafeInit(initAdminCarousel, "Admin Carousel Setup");
+    runSafeInit(initCheckout, "Checkout Flow Setup");
+    runSafeInit(initOrdersHistory, "Orders History Setup");
+    runSafeInit(initPrescriptionUpload, "Prescription Upload Setup");
     runSafeInit(initModalOverlayClicks, "Modal Overlay Clicks");
     
     // Auto-login view switch if saved user is admin
@@ -345,19 +371,42 @@ function initAuth() {
         });
     }
     
+    // Tab switching logic
+    const authTabs = document.querySelectorAll('.auth-tab');
+    const registerForm = document.getElementById('register-form');
+    
+    authTabs.forEach(tab => {
+        tab.addEventListener('click', () => {
+            authTabs.forEach(t => t.classList.remove('active'));
+            tab.classList.add('active');
+            
+            if (loginFeedback) loginFeedback.style.display = 'none';
+            
+            if (tab.dataset.tab === 'login') {
+                loginForm.classList.add('active');
+                registerForm.classList.remove('active');
+                registerForm.style.display = 'none';
+            } else {
+                registerForm.classList.add('active');
+                registerForm.style.display = 'block';
+                loginForm.classList.remove('active');
+            }
+        });
+    });
+
     loginForm.addEventListener('submit', (e) => {
         e.preventDefault();
         const emailInput = document.getElementById('login-email');
         const passInput = document.getElementById('login-password');
         if (!emailInput || !passInput) return;
         
-        const email = emailInput.value.trim();
+        const email = emailInput.value.trim().toLowerCase();
         const pass = passInput.value;
         
         if (loginFeedback) loginFeedback.style.display = 'block';
         
         // ADMIN TRIGGER LOGIC
-        if (email.toLowerCase() === 'admin@biosaude.com') {
+        if (email === 'admin@biosaude.com') {
             if (pass === state.adminPassword) {
                 state.isAdmin = true;
                 state.currentUser = { email: email, role: 'admin' };
@@ -388,8 +437,27 @@ function initAuth() {
                 }
             }
         } else {
-            // Simulated Client User sign in (Passwords are NOT stored/visible)
-            state.currentUser = { email: email, role: 'customer' };
+            // Client User sign in
+            const customer = state.customers.find(c => c.email.toLowerCase() === email);
+            if (!customer) {
+                if (loginFeedback) {
+                    loginFeedback.className = 'login-feedback-message error';
+                    loginFeedback.textContent = 'Usuário não encontrado. Crie uma conta.';
+                }
+                return;
+            }
+            
+            // Check password (fallback to 123456 for default mock users)
+            const expectedPass = customer.password || '123456';
+            if (pass !== expectedPass) {
+                if (loginFeedback) {
+                    loginFeedback.className = 'login-feedback-message error';
+                    loginFeedback.textContent = 'Senha incorreta.';
+                }
+                return;
+            }
+            
+            state.currentUser = { email: email, name: customer.name, role: 'customer' };
             localStorage.setItem('farmacia_user', JSON.stringify(state.currentUser));
             
             if (loginFeedback) {
@@ -405,6 +473,49 @@ function initAuth() {
             }, 1000);
         }
     });
+
+    if (registerForm) {
+        registerForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+            const name = document.getElementById('reg-name').value.trim();
+            const email = document.getElementById('reg-email').value.trim().toLowerCase();
+            const pass = document.getElementById('reg-password').value;
+            
+            if (loginFeedback) loginFeedback.style.display = 'block';
+            
+            if (state.customers.find(c => c.email.toLowerCase() === email)) {
+                loginFeedback.className = 'login-feedback-message error';
+                loginFeedback.textContent = 'E-mail já está cadastrado. Faça login.';
+                return;
+            }
+            
+            const newId = `c${Date.now()}`;
+            state.customers.push({
+                id: newId,
+                name: name,
+                email: email,
+                password: pass,
+                totalSpent: 0,
+                ordersCount: 0,
+                cashbackBalance: 0
+            });
+            localStorage.setItem('farmacia_customers', JSON.stringify(state.customers));
+            
+            // Auto login
+            state.currentUser = { email: email, name: name, role: 'customer' };
+            localStorage.setItem('farmacia_user', JSON.stringify(state.currentUser));
+            
+            loginFeedback.className = 'login-feedback-message success';
+            loginFeedback.textContent = 'Conta criada com sucesso! Redirecionando...';
+            
+            updateAccountButtonText();
+            
+            setTimeout(() => {
+                loginModal.classList.remove('active');
+                registerForm.reset();
+            }, 1000);
+        });
+    }
 }
 
 function updateAccountButtonText() {
@@ -511,6 +622,28 @@ function initAdminPanel() {
         changePasswordForm.addEventListener('submit', (e) => {
             e.preventDefault();
             changeAdminPassword();
+        });
+    }
+
+    // Image File Upload Logic
+    const prodImageInput = document.getElementById('prod-image');
+    const prodImageName = document.getElementById('prod-image-name');
+    const prodImageBase64 = document.getElementById('prod-image-base64');
+    
+    if (prodImageInput) {
+        prodImageInput.addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            if (file) {
+                prodImageName.textContent = file.name;
+                const reader = new FileReader();
+                reader.onload = function(evt) {
+                    prodImageBase64.value = evt.target.result;
+                };
+                reader.readAsDataURL(file);
+            } else {
+                prodImageName.textContent = "Nenhum arquivo selecionado";
+                prodImageBase64.value = "";
+            }
         });
     }
 }
@@ -642,8 +775,7 @@ function saveProductFromForm() {
     const type = document.getElementById('prod-type').value;
     const priceOriginalVal = parseFloat(document.getElementById('prod-price').value);
     const discountVal = parseInt(document.getElementById('prod-discount').value) || 0;
-    const imageUrl = document.getElementById('prod-image').value.trim();
-    const leve3Pague2 = document.getElementById('prod-promo-type').checked;
+    const base64Image = document.getElementById('prod-image-base64').value.trim();
     
     let priceCurrent = priceOriginalVal;
     let priceOriginal = null;
@@ -659,7 +791,8 @@ function saveProductFromForm() {
     if (category === 'cuidados') fallbackImg = 'https://images.unsplash.com/photo-1556228720-195a672e8a03?w=300&auto=format&fit=crop&q=60';
     if (category === 'bebe') fallbackImg = 'https://images.unsplash.com/photo-1544816155-12df9643f363?w=300&auto=format&fit=crop&q=60';
     
-    const finalImage = imageUrl || fallbackImg;
+    // Use the base64 if present, else fallback
+    const finalImage = base64Image || fallbackImg;
     
     if (editIdVal) {
         const id = parseInt(editIdVal);
@@ -676,8 +809,7 @@ function saveProductFromForm() {
                 priceCurrent,
                 discount: discountVal,
                 dosage,
-                image: finalImage,
-                leve3Pague2
+                image: finalImage
             };
             showGlobalNotification('Produto atualizado!');
         }
@@ -694,8 +826,7 @@ function saveProductFromForm() {
             priceCurrent,
             discount: discountVal,
             dosage,
-            image: finalImage,
-            leve3Pague2
+            image: finalImage
         });
         showGlobalNotification('Produto adicionado com sucesso!');
     }
@@ -703,6 +834,7 @@ function saveProductFromForm() {
     localStorage.setItem('farmacia_products', JSON.stringify(state.products));
     resetCrudForm();
     renderAdminProductsTable();
+    renderProducts();
 }
 
 function editProductFromTable(id) {
@@ -718,9 +850,12 @@ function editProductFromTable(id) {
     document.getElementById('prod-type').value = prod.type;
     document.getElementById('prod-price').value = prod.priceOriginal || prod.priceCurrent;
     document.getElementById('prod-discount').value = prod.discount || 0;
-    document.getElementById('prod-image').value = prod.image;
-    document.getElementById('prod-promo-type').checked = prod.leve3Pague2;
     
+    // For file inputs we can't set the value programmatically. Just keep base64 and update text.
+    const fileInputName = document.getElementById('prod-image-name');
+    if(fileInputName) fileInputName.textContent = "(Imagem atual mantida. Selecione para trocar)";
+    const fileBase64 = document.getElementById('prod-image-base64');
+    if(fileBase64) fileBase64.value = prod.image || "";
     document.getElementById('form-title-text').textContent = 'Editar Produto';
     document.getElementById('save-product-btn').textContent = 'Salvar Alterações';
     
@@ -733,6 +868,7 @@ function deleteProductFromTable(id) {
         state.products = state.products.filter(p => p.id !== id);
         localStorage.setItem('farmacia_products', JSON.stringify(state.products));
         renderAdminProductsTable();
+        renderProducts();
         showGlobalNotification('Produto removido.');
     }
 }
@@ -743,15 +879,18 @@ function resetCrudForm() {
     
     const editId = document.getElementById('edit-product-id');
     if (editId) editId.value = '';
-    
-    const formTitle = document.getElementById('form-title-text');
-    if (formTitle) formTitle.textContent = 'Adicionar Novo Produto';
-    
-    const saveBtn = document.getElementById('save-product-btn');
-    if (saveBtn) saveBtn.textContent = 'Salvar Produto';
+    document.getElementById('product-crud-form').reset();
+    document.getElementById('edit-product-id').value = '';
+    document.getElementById('form-title-text').textContent = 'Adicionar Novo Produto';
+    document.getElementById('save-product-btn').textContent = 'Salvar Produto';
     
     const cancelEditBtn = document.getElementById('cancel-edit-btn');
     if (cancelEditBtn) cancelEditBtn.style.display = 'none';
+    
+    const fileInputName = document.getElementById('prod-image-name');
+    if(fileInputName) fileInputName.textContent = "Nenhum arquivo selecionado";
+    const fileBase64 = document.getElementById('prod-image-base64');
+    if(fileBase64) fileBase64.value = "";
 }
 
 function changeAdminPassword() {
@@ -1430,3 +1569,435 @@ window.giveCashback = function(customerId) {
         }
     }
 };
+
+// ==========================================================================
+// DYNAMIC CAROUSEL (STOREFRONT & ADMIN)
+// ==========================================================================
+function initCarousel() {
+    renderStorefrontCarousel();
+}
+
+function renderStorefrontCarousel() {
+    const slidesContainer = document.querySelector('.carousel-slides');
+    const indicatorsContainer = document.querySelector('.carousel-indicators');
+    if (!slidesContainer || !indicatorsContainer) return;
+    
+    slidesContainer.innerHTML = '';
+    indicatorsContainer.innerHTML = '';
+    
+    state.carousel.forEach((slide, index) => {
+        // Slide visual content: either custom base64 image or lucide icon
+        let visualContent = `<i data-lucide="${slide.icon}" class="visual-icon"></i>`;
+        if (slide.image) {
+            visualContent = `<img src="${slide.image}" class="slide-visual-img" style="max-height: 220px; max-width: 100%; object-fit: contain; border-radius: var(--border-radius-md); filter: drop-shadow(0 10px 15px rgba(0,0,0,0.1));">`;
+        }
+
+        const slideDiv = document.createElement('div');
+        slideDiv.className = `carousel-slide ${index === 0 ? 'active' : ''}`;
+        slideDiv.style.background = slide.bg;
+        slideDiv.innerHTML = `
+            <div class="slide-content">
+                <span class="slide-tag">${slide.tag}</span>
+                <h2>${slide.title}</h2>
+                <p>${slide.desc}</p>
+                <a href="#vitrine" class="slide-btn">Ver Ofertas</a>
+            </div>
+            <div class="slide-visual" style="display:flex; align-items:center; justify-content:center;">
+                ${visualContent}
+            </div>
+        `;
+        slidesContainer.appendChild(slideDiv);
+        
+        // Indicator
+        const ind = document.createElement('span');
+        ind.className = `indicator ${index === 0 ? 'active' : ''}`;
+        ind.dataset.slide = index;
+        indicatorsContainer.appendChild(ind);
+    });
+    
+    // Re-initialize carousel JS logic
+    setupCarouselEvents();
+    try { if (typeof lucide !== 'undefined') lucide.createIcons(); } catch(e) {}
+}
+
+let carouselInterval = null;
+function setupCarouselEvents() {
+    const slides = document.querySelectorAll('.carousel-slide');
+    const indicators = document.querySelectorAll('.indicator');
+    const prevBtn = document.getElementById('carousel-prev');
+    const nextBtn = document.getElementById('carousel-next');
+    
+    if (slides.length === 0) return;
+    state.currentSlide = 0;
+    
+    function goToSlide(index) {
+        slides.forEach(s => s.classList.remove('active'));
+        indicators.forEach(i => i.classList.remove('active'));
+        
+        state.currentSlide = index;
+        if (state.currentSlide >= slides.length) state.currentSlide = 0;
+        if (state.currentSlide < 0) state.currentSlide = slides.length - 1;
+        
+        slides[state.currentSlide].classList.add('active');
+        if (indicators[state.currentSlide]) indicators[state.currentSlide].classList.add('active');
+    }
+    
+    if (prevBtn) prevBtn.onclick = () => { goToSlide(state.currentSlide - 1); resetCarouselTimer(); };
+    if (nextBtn) nextBtn.onclick = () => { goToSlide(state.currentSlide + 1); resetCarouselTimer(); };
+    
+    indicators.forEach((ind, idx) => {
+        ind.onclick = () => { goToSlide(idx); resetCarouselTimer(); };
+    });
+    
+    function resetCarouselTimer() {
+        if (carouselInterval) clearInterval(carouselInterval);
+        carouselInterval = setInterval(() => {
+            goToSlide(state.currentSlide + 1);
+        }, 5000);
+    }
+    resetCarouselTimer();
+}
+
+function initAdminCarousel() {
+    const form = document.getElementById('carousel-crud-form');
+    const imageInput = document.getElementById('slide-image');
+    const imageNameSpan = document.getElementById('slide-image-name');
+    const imageBase64Input = document.getElementById('slide-image-base64');
+
+    if (imageInput) {
+        imageInput.addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            if (file) {
+                imageNameSpan.textContent = file.name;
+                const reader = new FileReader();
+                reader.onload = function(evt) {
+                    imageBase64Input.value = evt.target.result;
+                };
+                reader.readAsDataURL(file);
+            } else {
+                imageNameSpan.textContent = "Nenhum arquivo selecionado";
+                imageBase64Input.value = "";
+            }
+        });
+    }
+
+    if (form) {
+        form.addEventListener('submit', (e) => {
+            e.preventDefault();
+            
+            const tag = document.getElementById('slide-tag').value;
+            const title = document.getElementById('slide-title').value;
+            const desc = document.getElementById('slide-desc').value;
+            const bg = document.getElementById('slide-gradient').value;
+            const icon = document.getElementById('slide-icon').value;
+            const image = imageBase64Input.value.trim();
+            
+            const newId = `slide_${Date.now()}`;
+            state.carousel.push({ id: newId, tag, title, desc, bg, icon, image: image || null });
+            
+            localStorage.setItem('farmacia_carousel', JSON.stringify(state.carousel));
+            renderAdminCarouselTable();
+            renderStorefrontCarousel();
+            form.reset();
+            if (imageNameSpan) imageNameSpan.textContent = "Nenhum arquivo selecionado";
+            if (imageBase64Input) imageBase64Input.value = "";
+            showGlobalNotification('Slide adicionado!');
+        });
+    }
+    renderAdminCarouselTable();
+}
+
+function renderAdminCarouselTable() {
+    const tbody = document.getElementById('admin-carousel-table-body');
+    if (!tbody) return;
+    
+    tbody.innerHTML = '';
+    state.carousel.forEach((slide, index) => {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+            <td><strong>${slide.title}</strong></td>
+            <td>${slide.tag}</td>
+            <td>#${index + 1}</td>
+            <td>
+                <button class="btn btn-secondary" style="padding:4px 8px; font-size:11px" onclick="deleteCarouselSlide('${slide.id}')">Excluir</button>
+            </td>
+        `;
+        tbody.appendChild(tr);
+    });
+}
+
+window.deleteCarouselSlide = function(id) {
+    if (confirm('Excluir este slide?')) {
+        state.carousel = state.carousel.filter(s => s.id !== id);
+        localStorage.setItem('farmacia_carousel', JSON.stringify(state.carousel));
+        renderAdminCarouselTable();
+        renderStorefrontCarousel();
+        showGlobalNotification('Slide removido!');
+    }
+};
+
+// ==========================================================================
+// CHECKOUT WIZARD
+// ==========================================================================
+function initCheckout() {
+    const btnFinalizar = document.getElementById('checkout-btn');
+    const checkoutModal = document.getElementById('checkout-modal');
+    const closeCheckout = document.getElementById('close-checkout-modal');
+    
+    const step1 = document.getElementById('checkout-step-1');
+    const step2 = document.getElementById('checkout-step-2');
+    const step3 = document.getElementById('checkout-step-3');
+    
+    const btnNextPayment = document.getElementById('btn-next-payment');
+    const btnBackAddress = document.getElementById('btn-back-address');
+    const btnFinishOrder = document.getElementById('btn-finish-order');
+    const btnCloseSuccess = document.getElementById('btn-close-success');
+    
+    const paymentRadios = document.querySelectorAll('input[name="payment_method"]');
+    const cardForm = document.getElementById('card-details-form');
+    const pixInfo = document.getElementById('pix-info-box');
+    
+    if (!btnFinalizar || !checkoutModal) return;
+    
+    btnFinalizar.addEventListener('click', () => {
+        if (!state.currentUser) {
+            alert("Por favor, faça login ou cadastre-se para finalizar a compra.");
+            document.getElementById('cart-drawer').classList.remove('active');
+            document.getElementById('login-modal').classList.add('active');
+            return;
+        }
+        if (state.cart.length === 0) {
+            alert("Seu carrinho está vazio!");
+            return;
+        }
+        
+        // Pre-fill CEP if available
+        if (state.cep) document.getElementById('chk-cep').value = state.cep;
+        
+        document.getElementById('cart-drawer').classList.remove('active');
+        step1.classList.add('active');
+        step2.classList.remove('active');
+        step3.classList.remove('active');
+        checkoutModal.classList.add('active');
+    });
+    
+    if (closeCheckout) closeCheckout.onclick = () => checkoutModal.classList.remove('active');
+    
+    if (btnNextPayment) {
+        btnNextPayment.onclick = () => {
+            if (document.getElementById('checkout-address-form').checkValidity()) {
+                step1.classList.remove('active');
+                step2.classList.add('active');
+            } else {
+                document.getElementById('checkout-address-form').reportValidity();
+            }
+        };
+    }
+    
+    if (btnBackAddress) {
+        btnBackAddress.onclick = () => {
+            step2.classList.remove('active');
+            step1.classList.add('active');
+        };
+    }
+    
+    paymentRadios.forEach(radio => {
+        radio.addEventListener('change', (e) => {
+            if (e.target.value === 'pix') {
+                cardForm.style.display = 'none';
+            } else {
+                cardForm.style.display = 'block';
+            }
+        });
+    });
+    
+    if (btnFinishOrder) {
+        btnFinishOrder.onclick = () => {
+            const method = document.querySelector('input[name="payment_method"]:checked').value;
+            if (method !== 'pix') {
+                const cardNum = document.getElementById('card-number').value;
+                if (!cardNum || cardNum.length < 14) {
+                    alert('Por favor, informe os dados do cartão.');
+                    return;
+                }
+            }
+            
+            // Generate order and increase customer spent/orders
+            if (state.currentUser) {
+                const customer = state.customers.find(c => c.email === state.currentUser.email);
+                const totals = calculateTotals();
+                if (customer) {
+                    customer.ordersCount += 1;
+                    customer.totalSpent += totals.total;
+                    localStorage.setItem('farmacia_customers', JSON.stringify(state.customers));
+                }
+                
+                // Add order details to state and localstorage
+                const newOrder = {
+                    id: `O-${Date.now()}`,
+                    email: state.currentUser.email,
+                    date: new Date().toLocaleDateString('pt-BR'),
+                    total: totals.total,
+                    items: state.cart.map(item => ({
+                        name: item.product.name,
+                        qty: item.quantity,
+                        price: item.product.priceCurrent
+                    }))
+                };
+                state.orders.push(newOrder);
+                localStorage.setItem('farmacia_orders', JSON.stringify(state.orders));
+            }
+            
+            // Clear Cart
+            state.cart = [];
+            localStorage.setItem('farmacia_cart', JSON.stringify(state.cart));
+            renderCart();
+            
+            // Show Success Step
+            step2.classList.remove('active');
+            step3.classList.add('active');
+            
+            if (method === 'pix') {
+                pixInfo.style.display = 'block';
+            } else {
+                pixInfo.style.display = 'none';
+            }
+        };
+    }
+    
+    if (btnCloseSuccess) {
+        btnCloseSuccess.onclick = () => {
+            checkoutModal.classList.remove('active');
+        };
+    }
+}
+
+// ==========================================================================
+// ORDERS HISTORY LOGIC
+// ==========================================================================
+function initOrdersHistory() {
+    const btnOrders = document.getElementById('orders-btn');
+    const modalOrders = document.getElementById('orders-modal');
+    const closeOrders = document.getElementById('close-orders-modal');
+    const container = document.getElementById('orders-list-container');
+    
+    if (!btnOrders || !modalOrders) return;
+    
+    btnOrders.addEventListener('click', (e) => {
+        e.preventDefault();
+        if (!state.currentUser) {
+            alert("Faça login para ver seus pedidos.");
+            document.getElementById('login-modal').classList.add('active');
+            return;
+        }
+        
+        renderOrdersList(container);
+        modalOrders.classList.add('active');
+    });
+    
+    if (closeOrders) closeOrders.onclick = () => modalOrders.classList.remove('active');
+}
+
+function renderOrdersList(container) {
+    if (!container) return;
+    const userOrders = state.orders.filter(o => o.email.toLowerCase() === state.currentUser.email.toLowerCase());
+    
+    if (userOrders.length === 0) {
+        container.innerHTML = `
+            <div style="text-align:center; padding: 40px; color: var(--text-light);">
+                <i data-lucide="package" style="width: 48px; height: 48px; margin-bottom: 10px; opacity: 0.5;"></i>
+                <p>Você ainda não realizou nenhum pedido.</p>
+            </div>
+        `;
+        try { if (typeof lucide !== 'undefined') lucide.createIcons(); } catch(e){}
+        return;
+    }
+    
+    container.innerHTML = userOrders.map(order => `
+        <div class="order-card">
+            <div class="order-card-header">
+                <h4>Pedido #${order.id}</h4>
+                <span>${order.date}</span>
+            </div>
+            <div class="order-card-body" style="display:flex; flex-direction:column; gap:6px; margin: 10px 0;">
+                ${order.items.map(it => `
+                    <div style="display:flex; justify-content:space-between;">
+                        <span>${it.qty}x ${it.name}</span>
+                        <span>R$ ${(it.price * it.qty).toFixed(2)}</span>
+                    </div>
+                `).join('')}
+            </div>
+            <div class="order-card-footer">
+                <span>Total:</span>
+                <span style="color: var(--primary); font-weight:700;">R$ ${order.total.toFixed(2)}</span>
+            </div>
+        </div>
+    `).join('');
+}
+
+// ==========================================================================
+// PRESCRIPTION UPLOAD LOGIC
+// ==========================================================================
+function initPrescriptionUpload() {
+    const btnReceita = document.getElementById('receita-btn');
+    const modalPrescription = document.getElementById('prescription-modal');
+    const closePrescription = document.getElementById('close-prescription-modal');
+    const formPrescription = document.getElementById('prescription-form');
+    const fileInput = document.getElementById('prescription-file');
+    const fileNameSpan = document.getElementById('prescription-file-name');
+    const progressDiv = document.getElementById('prescription-progress');
+    const progressBar = document.getElementById('prescription-progress-bar');
+    
+    if (!btnReceita || !modalPrescription) return;
+    
+    btnReceita.addEventListener('click', (e) => {
+        e.preventDefault();
+        if (!state.currentUser) {
+            alert("Faça login para enviar receitas.");
+            document.getElementById('login-modal').classList.add('active');
+            return;
+        }
+        modalPrescription.classList.add('active');
+    });
+    
+    if (closePrescription) closePrescription.onclick = () => modalPrescription.classList.remove('active');
+    
+    if (fileInput) {
+        fileInput.addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            if (file) {
+                fileNameSpan.textContent = file.name;
+            } else {
+                fileNameSpan.textContent = "Selecionar Imagem/PDF";
+            }
+        });
+    }
+    
+    if (formPrescription) {
+        formPrescription.addEventListener('submit', (e) => {
+            e.preventDefault();
+            if (!fileInput.files[0]) {
+                alert("Por favor, selecione um arquivo.");
+                return;
+            }
+            
+            progressDiv.style.display = 'block';
+            let width = 0;
+            const interval = setInterval(() => {
+                width += 20;
+                progressBar.style.width = width + '%';
+                if (width >= 100) {
+                    clearInterval(interval);
+                    setTimeout(() => {
+                        progressDiv.style.display = 'none';
+                        progressBar.style.width = '0%';
+                        modalPrescription.classList.remove('active');
+                        formPrescription.reset();
+                        fileNameSpan.textContent = "Selecionar Imagem/PDF";
+                        alert("Receita enviada com sucesso! Nossos farmacêuticos analisarão o arquivo.");
+                    }, 500);
+                  }
+            }, 200);
+        });
+    }
+}
