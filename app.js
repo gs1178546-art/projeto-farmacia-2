@@ -643,20 +643,7 @@ function initAdminPanel() {
     
     navButtons.forEach(btn => {
         btn.addEventListener('click', () => {
-            navButtons.forEach(b => b.classList.remove('active'));
-            btn.classList.add('active');
-            
-            const target = btn.dataset.target;
-            document.querySelectorAll('.admin-section').forEach(sec => {
-                sec.classList.remove('active');
-            });
-            
-            const targetSec = document.getElementById(target);
-            if (targetSec) targetSec.classList.add('active');
-            
-            if (target === 'admin-dashboard') {
-                drawSalesChart();
-            }
+            adminShowTab(btn.dataset.target);
         });
     });
     
@@ -2245,8 +2232,19 @@ function adminShowTab(targetSecId) {
         }
     });
     
+    // Dynamic renders on tab navigation
     if (targetSecId === 'admin-dashboard') {
         drawSalesChart();
+    } else if (targetSecId === 'admin-products') {
+        if (typeof renderAdminProductsTable === 'function') renderAdminProductsTable();
+    } else if (targetSecId === 'admin-carousel') {
+        if (typeof renderAdminCarouselTable === 'function') renderAdminCarouselTable();
+    } else if (targetSecId === 'admin-promos') {
+        if (typeof renderAdminPromosTable === 'function') renderAdminPromosTable();
+    } else if (targetSecId === 'admin-customers') {
+        if (typeof renderAdminCustomersTable === 'function') renderAdminCustomersTable();
+    } else if (targetSecId === 'admin-orders') {
+        if (typeof renderAdminOrdersTable === 'function') renderAdminOrdersTable();
     }
 }
 
